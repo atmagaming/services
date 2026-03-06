@@ -10,14 +10,20 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
   const body = (await request.json()) as Record<string, unknown>;
 
   const allowed = [
-    "name", "nickname", "image", "identification", "weeklySchedule",
-    "hourlyRatePaid", "hourlyRateAccrued", "email", "notionPersonPageId",
-    "telegramAccount", "discord", "linkedin", "description",
+    "name", "firstName", "lastName", "nickname", "image", "identification",
+    "passportNumber", "passportIssueDate", "passportIssuingAuthority",
+    "weeklySchedule", "hourlyRatePaid", "hourlyRateAccrued", "email",
+    "notionPersonPageId", "telegramAccount", "discord", "linkedin", "description",
   ];
 
   const data: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in body) data[key] = body[key];
+  }
+
+  if ("roles" in body && Array.isArray(body.roles)) {
+    await prisma.personRole.deleteMany({ where: { personId: params.id } });
+    data.roles = { create: (body.roles as { notionId: string; name: string }[]).map(({ notionId, name }) => ({ notionId, name })) };
   }
 
   const person = await prisma.person.update({

@@ -19,10 +19,12 @@
 {#if isAuthPage}
   <slot />
 {:else}
-  <div>
+  <div class="flex h-screen flex-col overflow-hidden">
     <AppNav user={data.user} />
-    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <slot />
+    <main class="flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div class="mx-auto flex h-full max-w-7xl flex-col">
+        <slot />
+      </div>
     </main>
   </div>
 {/if}

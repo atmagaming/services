@@ -1,7 +1,25 @@
 import type { Person, SensitiveData, Transaction, TransactionMethod } from "$lib/types";
 import { prisma } from "$lib/server/prisma";
+import { fetchAllRoles, fetchPersonRoles } from "$lib/server/notion";
 
 const CACHE_TTL = 300_000; // 5 minutes in ms
+
+// Roles and person→role assignments are fetched once on first use and kept in memory
+let notionRolesPromise: Promise<Map<string, string>> | null = null;
+let notionPersonRolesPromise: Promise<Map<string, string[]>> | null = null;
+
+export function getNotionRoles(): Promise<Map<string, string>> {
+  notionRolesPromise ??= fetchAllRoles()
+    .then((roles) => new Map(roles.map((r) => [r.notionId, r.name])))
+    .catch((e) => { console.error("Failed to load Notion roles: " + (e as Error).message); return new Map<string, string>(); });
+  return notionRolesPromise;
+}
+
+function getNotionPersonRoles(): Promise<Map<string, string[]>> {
+  notionPersonRolesPromise ??= fetchPersonRoles()
+    .catch((e) => { console.error("Failed to load Notion person roles: " + (e as Error).message); return new Map<string, string[]>(); });
+  return notionPersonRolesPromise;
+}
 
 interface CacheEntry<T> {
   data: T;
@@ -33,28 +51,41 @@ function countMondaysInMonth(year: number, month: number): number {
 }
 
 async function fetchPeople(): Promise<Person[]> {
-  const records = await prisma.person.findMany({
-    include: { statusChanges: true, documents: true, roles: true },
+  const [records, roleNames, personRoles] = await Promise.all([
+    prisma.person.findMany({ include: { statusChanges: true, documents: true } }),
+    getNotionRoles(),
+    getNotionPersonRoles(),
+  ]);
+  return records.map((r) => {
+    const roleIds = personRoles.get(r.notionPersonPageId) ?? [];
+    const roles = roleIds
+      .map((notionId) => ({ notionId, name: roleNames.get(notionId) ?? "" }))
+      .filter((role) => role.name);
+    return {
+      id: r.id,
+      name: r.name,
+      firstName: r.firstName ?? "",
+      lastName: r.lastName ?? "",
+      nickname: r.nickname ?? "",
+      image: r.image ?? "",
+      identification: r.identification,
+      passportNumber: r.passportNumber ?? "",
+      passportIssueDate: r.passportIssueDate ?? "",
+      passportIssuingAuthority: r.passportIssuingAuthority ?? "",
+      weeklySchedule: r.weeklySchedule,
+      hourlyRatePaid: r.hourlyRatePaid,
+      hourlyRateAccrued: r.hourlyRateAccrued,
+      email: r.email,
+      notionPersonPageId: r.notionPersonPageId,
+      telegramAccount: r.telegramAccount,
+      discord: r.discord ?? "",
+      linkedin: r.linkedin ?? "",
+      description: r.description ?? "",
+      statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
+      documents: r.documents.map((d) => ({ id: d.id, name: d.name, url: d.url })),
+      roles,
+    };
   });
-  return records.map((r) => ({
-    id: r.id,
-    name: r.name,
-    nickname: r.nickname ?? "",
-    image: r.image ?? "",
-    identification: r.identification,
-    weeklySchedule: r.weeklySchedule,
-    hourlyRatePaid: r.hourlyRatePaid,
-    hourlyRateAccrued: r.hourlyRateAccrued,
-    email: r.email,
-    notionPersonPageId: r.notionPersonPageId,
-    telegramAccount: r.telegramAccount,
-    discord: r.discord ?? "",
-    linkedin: r.linkedin ?? "",
-    description: r.description ?? "",
-    statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
-    documents: r.documents.map((d) => ({ id: d.id, name: d.name, url: d.url })),
-    roles: r.roles.map((role) => ({ id: role.id, name: role.name, notionId: role.notionId })),
-  }));
 }
 
 async function fetchTransactions(): Promise<Transaction[]> {

@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: atma-dashboard
+    name: dashboard
     runtime: node
     plan: starter
     buildCommand: "npm install -g bun && bun install && bun run build"
     startCommand: "bun run start"
-    healthCheckPath: /finances
+    healthCheckPath: /dashboard
     domains:
       - dashboard.atmagaming.com
     envVars:

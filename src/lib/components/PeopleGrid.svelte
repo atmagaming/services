@@ -23,7 +23,7 @@
         <p class="text-sm font-semibold text-foreground">{person.nickname || person.name}</p>
         {#if person.roles.length > 0}
           <div class="mt-1 flex flex-wrap justify-center gap-1">
-            {#each person.roles as role (role.id)}
+            {#each person.roles as role (role.notionId)}
               <span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{role.name}</span>
             {/each}
           </div>

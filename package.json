@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@interactive-inc/notion-client": "^1.6.0",
-    "@lucide/svelte": "^0.575.0",
+    "@lucide/svelte": "^0.561.0",
     "@notionhq/client": "^5.9.0",
     "@prisma/adapter-libsql": "^7.4.1",
     "@prisma/client": "^7.4.1",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
+    "@internationalized/date": "^3.10.0",
     "@sveltejs/adapter-node": "^5.5.3",
     "@sveltejs/kit": "^2.53.2",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",

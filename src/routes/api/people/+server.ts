@@ -30,9 +30,14 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   const body = (await request.json()) as {
     name?: string;
+    firstName?: string;
+    lastName?: string;
     nickname?: string;
     image?: string;
     identification?: string;
+    passportNumber?: string;
+    passportIssueDate?: string;
+    passportIssuingAuthority?: string;
     weeklySchedule?: string;
     hourlyRatePaid?: number;
     hourlyRateAccrued?: number;
@@ -42,6 +47,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     discord?: string;
     linkedin?: string;
     description?: string;
+    roles?: { notionId: string; name: string }[];
   };
 
   if (!body.name) {
@@ -51,9 +57,14 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   const person = await prisma.person.create({
     data: {
       name: body.name,
+      firstName: body.firstName ?? "",
+      lastName: body.lastName ?? "",
       nickname: body.nickname ?? "",
       image: body.image ?? "",
       identification: body.identification ?? "",
+      passportNumber: body.passportNumber ?? "",
+      passportIssueDate: body.passportIssueDate ?? "",
+      passportIssuingAuthority: body.passportIssuingAuthority ?? "",
       weeklySchedule: body.weeklySchedule ?? "4,4,4,4,4,0,0",
       hourlyRatePaid: body.hourlyRatePaid ?? 0,
       hourlyRateAccrued: body.hourlyRateAccrued ?? 0,
@@ -66,6 +77,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       statusChanges: {
         create: { date: new Date().toISOString().slice(0, 10), status: "inactive" },
       },
+      roles: body.roles?.length
+        ? { create: body.roles.map(({ notionId, name }) => ({ notionId, name })) }
+        : undefined,
     },
     include: { statusChanges: true, documents: true, roles: true },
   });

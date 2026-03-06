@@ -10,7 +10,7 @@
   const links = [
     { href: "/finances", label: "Overview" },
     { href: "/transactions", label: "Transactions" },
-    { href: "/hr", label: "People" },
+    { href: "/people", label: "People" },
   ];
 
   $: navLinks = user?.isSuperAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;

@@ -144,6 +144,7 @@
     return {
       tooltip: {
         trigger: "axis",
+        appendToBody: true,
         backgroundColor: "#ffffff",
         borderColor: resolveCssVar("var(--border-legacy)"),
         textStyle: { fontSize: 12 },
@@ -167,8 +168,8 @@
           return `<strong>${label}</strong><br/>${lines.join("<br/>")}`;
         },
       },
-      legend: { data: legendNames, bottom: 0 },
-      grid: { left: 50, right: 30, top: 40, bottom: 50 },
+      legend: { show: false },
+      grid: { left: 50, right: 30, top: 40, bottom: 30 },
       xAxis: {
         type: "category",
         data: monthsArr,
@@ -214,5 +215,13 @@
     <div style={`min-width: ${Math.max(900, months.length * 16)}px;`}>
       <div bind:this={container} style="height: 400px"></div>
     </div>
+  </div>
+  <div class="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+    {#each series as s}
+      <div class="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <span class="inline-block h-3 w-3 rounded-sm" style={`background: ${s.color}`}></span>
+        {s.name}
+      </div>
+    {/each}
   </div>
 </div>

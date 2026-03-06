@@ -27,17 +27,21 @@ export interface PersonDocument {
 }
 
 export interface PersonRole {
-  id: string;
-  name: string;
   notionId: string;
+  name: string;
 }
 
 export interface Person {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   nickname: string;
   image: string;
   identification: string;
+  passportNumber: string;
+  passportIssueDate: string;
+  passportIssuingAuthority: string;
   weeklySchedule: string;
   hourlyRatePaid: number;
   hourlyRateAccrued: number;

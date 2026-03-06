@@ -1,10 +1,6 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
   import type { Person } from "$lib/types";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
   import {
-    Table,
     TableHeader,
     TableBody,
     TableRow,
@@ -13,7 +9,7 @@
   } from "$lib/components/ui/table/index.js";
 
   export let people: Person[] = [];
-  export let canEditPeople = false;
+  export let onEditPerson: (person: Person) => void = () => {};
 
   const STATUS_LABELS: Record<string, string> = {
     working: "Working",
@@ -33,73 +29,29 @@
     const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
     return sorted.at(-1)?.status ?? "inactive";
   }
-
-  let statusForms: Record<string, { status: string; date: string }> = {};
-
-  function initStatusForm(personId: string) {
-    if (!statusForms[personId]) {
-      statusForms[personId] = {
-        status: "working",
-        date: new Date().toISOString().slice(0, 10),
-      };
-    }
-  }
-
-  let expandedStatusForm: string | null = null;
-
-  async function addStatus(personId: string) {
-    const form = statusForms[personId];
-    if (!form) return;
-    const res = await fetch(`/api/people/${personId}/status`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      alert(body.message ?? "Failed to update status");
-      return;
-    }
-    expandedStatusForm = null;
-    await invalidateAll();
-  }
-
-  async function deletePerson(personId: string) {
-    if (!confirm("Delete this person? This cannot be undone.")) return;
-    const res = await fetch(`/api/people/${personId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      alert(body.message ?? "Failed to delete");
-      return;
-    }
-    await invalidateAll();
-  }
 </script>
 
-<Table>
+<table class="w-full caption-bottom text-sm">
   <TableHeader>
-    <TableRow class="border-b border-border hover:bg-transparent">
-      <TableHead>Person</TableHead>
-      <TableHead>Roles</TableHead>
-      <TableHead>Status</TableHead>
-      <TableHead>Schedule</TableHead>
-      <TableHead>Rate (Paid)</TableHead>
-      <TableHead>Rate (Accrued)</TableHead>
-      <TableHead>Email</TableHead>
-      <TableHead>Telegram</TableHead>
-      <TableHead>Discord</TableHead>
-      <TableHead>LinkedIn</TableHead>
-      <TableHead>Notion</TableHead>
-      {#if canEditPeople}
-        <TableHead class="text-right">Actions</TableHead>
-      {/if}
+    <TableRow class="hover:bg-transparent">
+      <TableHead class="sticky left-0 top-0 z-20 border-b border-border bg-card after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border after:content-['']">Person</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Roles</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Status</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Schedule</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Rate (Paid)</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Rate (Accrued)</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Email</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Telegram</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Discord</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">LinkedIn</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card">Notion</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
     {#each people as person (person.id)}
       {@const latestStatus = getLatestStatus(person)}
-      <TableRow>
-        <TableCell class="px-4 py-2">
+      <TableRow class="group cursor-pointer" onclick={() => onEditPerson(person)}>
+        <TableCell class="sticky left-0 z-10 bg-card px-4 py-2 group-hover:!bg-card after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border after:content-['']">
           <div class="flex items-center gap-2">
             {#if person.image}
               <img
@@ -123,7 +75,7 @@
         </TableCell>
         <TableCell class="px-4 py-2">
           <div class="flex flex-wrap gap-1">
-            {#each person.roles as role (role.id)}
+            {#each person.roles as role (role.notionId)}
               <span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{role.name}</span>
             {/each}
           </div>
@@ -141,7 +93,7 @@
         <TableCell class="px-4 py-2 text-sm text-muted-foreground">{person.discord || "—"}</TableCell>
         <TableCell class="px-4 py-2">
           {#if person.linkedin}
-            <a href={person.linkedin} target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline">LinkedIn</a>
+            <a href={person.linkedin} target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline" onclick={(e) => e.stopPropagation()}>LinkedIn</a>
           {:else}
             <span class="text-sm text-muted-foreground">—</span>
           {/if}
@@ -153,6 +105,7 @@
               target="_blank"
               rel="noopener noreferrer"
               class="text-xs text-primary hover:underline"
+              onclick={(e) => e.stopPropagation()}
             >
               Notion
             </a>
@@ -160,57 +113,7 @@
             <span class="text-sm text-muted-foreground">—</span>
           {/if}
         </TableCell>
-        {#if canEditPeople}
-          <TableCell class="px-4 py-2 text-right">
-            <div class="flex items-center justify-end gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onclick={() => {
-                  initStatusForm(person.id);
-                  expandedStatusForm = expandedStatusForm === person.id ? null : person.id;
-                }}
-              >
-                Status
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="text-destructive hover:text-destructive"
-                onclick={() => deletePerson(person.id)}
-              >
-                Delete
-              </Button>
-            </div>
-          </TableCell>
-        {/if}
       </TableRow>
-      {#if canEditPeople && expandedStatusForm === person.id}
-        <TableRow class="bg-muted/30">
-          <TableCell colspan={12} class="px-4 py-3">
-            <div class="flex items-end gap-3">
-              <div>
-                <label class="mb-1 block text-xs font-medium text-muted-foreground">New Status</label>
-                <select
-                  bind:value={statusForms[person.id].status}
-                  class="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                >
-                  <option value="working">Working</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="vacation">Vacation</option>
-                  <option value="sick_leave">Sick Leave</option>
-                </select>
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-muted-foreground">Date</label>
-                <Input type="date" bind:value={statusForms[person.id].date} class="w-40" />
-              </div>
-              <Button size="sm" onclick={() => addStatus(person.id)}>Save</Button>
-              <Button variant="ghost" size="sm" onclick={() => (expandedStatusForm = null)}>Cancel</Button>
-            </div>
-          </TableCell>
-        </TableRow>
-      {/if}
     {/each}
   </TableBody>
-</Table>
+</table>
