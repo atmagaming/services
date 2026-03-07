@@ -3,6 +3,7 @@
   import { PUBLIC_NDA_TEMPLATE_URL, PUBLIC_CONTRACT_TEMPLATE_URL } from "$env/static/public";
   import ExternalLink from "$lib/components/ExternalLink.svelte";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
   import type { Person } from "$lib/types";
 
   export let person: Person;
@@ -23,6 +24,9 @@
   let dragOver: DocCategory | null = null;
   let signing: DocCategory | null = null;
   let signError = "";
+  let signDialogOpen = false;
+  let signDialogCategory: "nda" | "contract" | null = null;
+  let signUrl: string | null = null;
   export let viewingDocUrl: string | null = null;
 
   async function uploadFile(file: File, category: DocCategory) {
@@ -65,6 +69,9 @@
     if (existing.length > 0 && !confirm(`A ${category.toUpperCase()} already exists. Add a new version anyway?`)) return;
     signing = category;
     signError = "";
+    signUrl = null;
+    signDialogCategory = category;
+    signDialogOpen = true;
     try {
       const res = await fetch(`/api/people/${person.id}/sign`, {
         method: "POST",
@@ -73,7 +80,7 @@
       });
       const data = (await res.json()) as { signUrl?: string; message?: string };
       if (!res.ok) { signError = data.message ?? "Signing failed"; return; }
-      if (data.signUrl) window.open(data.signUrl, "_blank");
+      signUrl = data.signUrl ?? null;
     } catch (e) {
       signError = "Signing failed: " + (e as Error).message;
     } finally {
@@ -192,8 +199,43 @@
       </div>
     {/each}
 
-    {#if signError}
-      <p class="mt-2 text-xs text-destructive">{signError}</p>
-    {/if}
   </div>
 </section>
+
+<Dialog.Root bind:open={signDialogOpen}>
+  <Dialog.Content showCloseButton={!signing}>
+    <Dialog.Header>
+      <Dialog.Title>
+        {signDialogCategory?.toUpperCase()} Signing Request
+      </Dialog.Title>
+    </Dialog.Header>
+
+    {#if signing}
+      <div class="flex items-center gap-3 py-4">
+        <svg class="size-5 animate-spin text-muted-foreground" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <span class="text-sm text-muted-foreground">Sending signing request…</span>
+      </div>
+    {:else if signError}
+      <p class="py-2 text-sm text-destructive">{signError}</p>
+    {:else if signUrl}
+      <div class="space-y-3 py-2">
+        <p class="text-sm text-muted-foreground">The signing request was sent. Use the link below to sign the document:</p>
+        <a
+          href={signUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block truncate rounded-md border border-border bg-muted px-3 py-2 text-sm text-primary underline underline-offset-2 hover:bg-muted/70"
+        >{signUrl}</a>
+      </div>
+    {/if}
+
+    {#if !signing}
+      <Dialog.Footer>
+        <Dialog.Close class="rounded px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted">Close</Dialog.Close>
+      </Dialog.Footer>
+    {/if}
+  </Dialog.Content>
+</Dialog.Root>
