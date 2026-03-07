@@ -11,3 +11,4 @@ prisma/dev.db-journal
 generated/
 .playwright-mcp/
 .vscode/
+logs/
