@@ -1,12 +1,11 @@
-import type { RequestHandler } from "./$types";
-import { prisma } from "$lib/server/prisma";
-import { uploadToDrive } from "$lib/server/google-drive";
-import { uploadImageToNotion, setPersonNotionIcon } from "$lib/server/notion";
 import { invalidateCache } from "$lib/server/data";
+import { uploadToDrive } from "$lib/server/google-drive";
+import { setPersonNotionIcon, uploadImageToNotion } from "$lib/server/notion";
+import { prisma } from "$lib/server/prisma";
+import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ locals, request, params }) => {
-  if (!locals.user?.canEditPeople)
-    return new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 });
+  if (!locals.user?.canEditPeople) return new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 });
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;

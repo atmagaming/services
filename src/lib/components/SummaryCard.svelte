@@ -1,10 +1,7 @@
 <script lang="ts">
-  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 
-  export let label: string;
-  export let value: number;
-  export let color: string;
-  export let bg: string;
+const { label, value, color, bg }: { label: string; value: number; color: string; bg: string } = $props();
 </script>
 
 <Card class="gap-2 py-5" style={`background: ${bg};`}>

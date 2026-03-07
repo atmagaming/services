@@ -1,12 +1,12 @@
 <script lang="ts">
-  import SummaryCard from "$lib/components/SummaryCard.svelte";
-  import ExpenseChart from "$lib/components/charts/ExpenseChart.svelte";
-  import RevenueChart from "$lib/components/charts/RevenueChart.svelte";
-  import InvestmentChart from "$lib/components/charts/InvestmentChart.svelte";
-  import TeamBreakdownTable from "$lib/components/TeamBreakdownTable.svelte";
+import ExpenseChart from "$lib/components/charts/ExpenseChart.svelte";
+import InvestmentChart from "$lib/components/charts/InvestmentChart.svelte";
+import RevenueChart from "$lib/components/charts/RevenueChart.svelte";
+import SummaryCard from "$lib/components/SummaryCard.svelte";
+import TeamBreakdownTable from "$lib/components/TeamBreakdownTable.svelte";
 
-  export let data: { data: any };
-  const dashboard = data.data;
+const { data }: { data: { data: any } } = $props();
+const dashboard = $derived(data.data);
 </script>
 
 {#if dashboard}

@@ -57,10 +57,11 @@ model Person {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  statusChanges PersonStatusChange[]
-  transactions  Transaction[]
-  roles         PersonRole[]
-  documents     PersonDocument[]
+  statusChanges   PersonStatusChange[]
+  transactions    Transaction[]
+  roles           PersonRole[]
+  documents       PersonDocument[]
+  signingRequests SigningRequest[]
 }
 
 // status values: "inactive" | "working" | "vacation" | "sick_leave"
@@ -88,6 +89,18 @@ model PersonRole {
   personId String
   name     String
   notionId String @default("")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model SigningRequest {
+  id         String   @id @default(cuid())
+  personId   String
+  category   String
+  requestId  String
+  adminUrl   String
+  personUrl  String
+  createdAt  DateTime @default(now())
 
   person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 }

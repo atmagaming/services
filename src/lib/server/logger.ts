@@ -1,4 +1,4 @@
-import { mkdir, appendFile } from "fs/promises";
+import { appendFile, mkdir } from "fs/promises";
 import { join } from "path";
 
 const logsDir = join(process.cwd(), "logs");
@@ -11,12 +11,7 @@ async function ensureLogsDir() {
   }
 }
 
-export async function logRequest(
-  method: string,
-  url: string,
-  status: number,
-  duration: number
-) {
+export async function logRequest(method: string, url: string, status: number, duration: number) {
   await ensureLogsDir();
 
   const timestamp = new Date().toISOString();

@@ -1,9 +1,9 @@
-import type { RequestHandler } from "./$types";
 import { randomBytes } from "node:crypto";
 import { Resend } from "resend";
 import { env } from "$env/dynamic/private";
 import { env as publicEnv } from "$env/dynamic/public";
 import { prisma } from "$lib/server/prisma";
+import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request }) => {
   const { email } = (await request.json()) as { email?: string };

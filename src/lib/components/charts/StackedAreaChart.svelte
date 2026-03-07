@@ -1,36 +1,63 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
-  import { browser } from "$app/environment";
-  import * as echarts from "echarts/core";
-  import { LineChart } from "echarts/charts";
-  import { GridComponent, TooltipComponent, LegendComponent, MarkLineComponent } from "echarts/components";
-  import { CanvasRenderer } from "echarts/renderers";
-  import type { ChartSeries } from "$lib/types";
-  import { formatMonthLabel, quarterTicks } from "$lib/charts";
+import { LineChart } from "echarts/charts";
+import { GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } from "echarts/components";
+import * as echarts from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { onDestroy, onMount } from "svelte";
+import { browser } from "$app/environment";
+import type { ChartSeries } from "$lib/types";
+import "$lib/date-extensions";
+import type { Snippet } from "svelte";
 
-  echarts.use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, MarkLineComponent]);
+const monthLabel = (m: string) => Date.fromIso(`${m}-01`).toLocaleString("en-US", { month: "short", year: "numeric" });
 
-  export let title: string;
-  export let months: string[] = [];
-  export let series: ChartSeries[] = [];
-  export let lastHistMonth: string;
-  export let yAxisFormatter: ((v: number) => string) | undefined = undefined;
-  export let tooltipValueFormatter: ((v: number) => string) | undefined = undefined;
-  export let showTotalLabels = false;
-  export let yAxisMin: number | undefined = undefined;
-  export let yAxisMax: number | undefined = undefined;
+function quarterTicks(months: string[]): string[] {
+  if (months.length === 0) return [];
+  const special = new Set([months[0], months[months.length - 1]]);
+  return months.filter((m) => {
+    const month = Number(m.split("-")[1]);
+    return month === 1 || month === 4 || month === 7 || month === 10 || special.has(m);
+  });
+}
 
-  let container: HTMLDivElement | null = null;
-  let chart: echarts.ECharts | null = null;
-  let resizeObserver: ResizeObserver | null = null;
+echarts.use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, MarkLineComponent]);
 
-  function resolveCssVar(value: string): string {
-    if (!browser || !value.startsWith("var(")) return value;
-    const varName = value.slice(4, -1).trim();
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || value;
-  }
+const {
+  title,
+  months = [],
+  series = [],
+  lastHistMonth,
+  yAxisFormatter = undefined,
+  tooltipValueFormatter = undefined,
+  showTotalLabels = false,
+  yAxisMin = undefined,
+  yAxisMax = undefined,
+  actions = undefined,
+}: {
+  title: string;
+  months?: string[];
+  series?: ChartSeries[];
+  lastHistMonth: string;
+  yAxisFormatter?: ((v: number) => string) | undefined;
+  tooltipValueFormatter?: ((v: number) => string) | undefined;
+  showTotalLabels?: boolean;
+  yAxisMin?: number | undefined;
+  yAxisMax?: number | undefined;
+  actions?: Snippet;
+} = $props();
 
-  $: option = (() => {
+let container = $state<HTMLDivElement | null>(null);
+let chart: echarts.ECharts | null = null;
+let resizeObserver: ResizeObserver | null = null;
+
+function resolveCssVar(value: string): string {
+  if (!browser || !value.startsWith("var(")) return value;
+  const varName = value.slice(4, -1).trim();
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || value;
+}
+
+const option = $derived(
+  (() => {
     const monthsArr = months;
     const seriesArr = series;
     if (monthsArr.length === 0 || seriesArr.length === 0) return {};
@@ -60,10 +87,8 @@
     }
 
     const echartsSeries: unknown[] = [];
-    const legendNames: string[] = [];
 
     seriesArr.forEach((s, i) => {
-      legendNames.push(s.name);
       const isLast = i === seriesArr.length - 1;
       const resolvedColor = resolveCssVar(s.color);
       const hasLabel = showTotalLabels && isLast;
@@ -91,7 +116,7 @@
               xAxis: lastHistMonth,
               label: {
                 show: true,
-                formatter: () => formatMonthLabel(lastHistMonth),
+                formatter: () => monthLabel(lastHistMonth),
                 position: "end",
                 fontSize: 11,
                 color: mutedColor,
@@ -115,7 +140,7 @@
       echartsSeries.push(hist);
 
       const proj: Record<string, unknown> = {
-        name: `${s.name} (proj)` ,
+        name: `${s.name} (proj)`,
         type: "line",
         stack: "proj",
         areaStyle: { opacity: 0.1 },
@@ -151,7 +176,7 @@
         formatter(params: Array<{ seriesName: string; value: number | null; color: string; axisValueLabel: string }>) {
           const first = params[0];
           if (!first) return "";
-          const label = formatMonthLabel(first.axisValueLabel);
+          const label = monthLabel(first.axisValueLabel);
           const seen = new Set<string>();
           const lines = params
             .filter((p) => p.value != null)
@@ -174,7 +199,7 @@
         type: "category",
         data: monthsArr,
         axisLabel: {
-          formatter: formatMonthLabel,
+          formatter: monthLabel,
           interval: (index: number) => intervalFlags[index],
         },
       },
@@ -186,30 +211,31 @@
       },
       series: echartsSeries,
     };
-  })();
+  })(),
+);
 
-  onMount(() => {
-    if (!browser || !container) return;
-    chart = echarts.init(container);
-    chart.setOption(option as echarts.EChartsCoreOption, true);
-    resizeObserver = new ResizeObserver(() => chart?.resize());
-    resizeObserver.observe(container);
-  });
+onMount(() => {
+  if (!browser || !container) return;
+  chart = echarts.init(container);
+  chart.setOption(option as echarts.EChartsCoreOption, true);
+  resizeObserver = new ResizeObserver(() => chart?.resize());
+  resizeObserver.observe(container);
+});
 
-  $: if (chart) {
-    chart.setOption(option as echarts.EChartsCoreOption, true);
-  }
+$effect(() => {
+  if (chart) chart.setOption(option as echarts.EChartsCoreOption, true);
+});
 
-  onDestroy(() => {
-    resizeObserver?.disconnect();
-    chart?.dispose();
-  });
+onDestroy(() => {
+  resizeObserver?.disconnect();
+  chart?.dispose();
+});
 </script>
 
 <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
   <div class="mb-4 flex items-center justify-between">
     <h2 class="text-lg font-semibold">{title}</h2>
-    <slot name="actions" />
+    {@render actions?.()}
   </div>
   <div class="overflow-x-auto">
     <div style={`min-width: ${Math.max(900, months.length * 16)}px;`}>

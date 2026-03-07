@@ -1,13 +1,11 @@
-import type { RequestHandler } from "./$types";
+import { superAdminEmails } from "$lib/server/admin";
 import { prisma } from "$lib/server/prisma";
-import { getSuperAdminEmails } from "$lib/server/admin";
+import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals }) => {
   if (!locals.user?.isSuperAdmin) {
     return new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 });
   }
-
-  const superAdminEmails = getSuperAdminEmails();
 
   const users = await prisma.user.findMany({
     select: {
@@ -27,8 +25,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-  const superAdminEmails = getSuperAdminEmails();
-
   if (!locals.user?.email || !superAdminEmails.includes(locals.user.email)) {
     return new Response(JSON.stringify({ message: "Only super-admin can manage permissions" }), { status: 403 });
   }
@@ -58,8 +54,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 };
 
 export const DELETE: RequestHandler = async ({ locals, request }) => {
-  const superAdminEmails = getSuperAdminEmails();
-
   if (!locals.user?.email || !superAdminEmails.includes(locals.user.email)) {
     return new Response(JSON.stringify({ message: "Only super-admin can remove permissions" }), { status: 403 });
   }

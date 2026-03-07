@@ -1,8 +1,8 @@
 <script lang="ts">
-  import TransactionsTable from "$lib/components/TransactionsTable.svelte";
+import TransactionsTable from "$lib/components/TransactionsTable.svelte";
 
-  export let data: { data: any };
-  const payload = data.data;
+const { data }: { data: { data: any } } = $props();
+const payload = $derived(data.data);
 </script>
 
 {#if payload}

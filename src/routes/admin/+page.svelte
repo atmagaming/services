@@ -1,73 +1,73 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Card, CardHeader, CardContent, CardTitle } from "$lib/components/ui/card/index.js";
-  import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/index.js";
+import { invalidateAll } from "$app/navigation";
+import { Button } from "$lib/components/ui/button/index.js";
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
 
-  interface UserRecord {
-    id: string;
-    email: string;
-    name: string | null;
-    canViewTransactions: boolean;
-    canViewRevenueShares: boolean;
-    canViewPersonalData: boolean;
-    canEditPeople: boolean;
-  }
+interface UserRecord {
+  id: string;
+  email: string;
+  name: string | null;
+  canViewTransactions: boolean;
+  canViewRevenueShares: boolean;
+  canViewPersonalData: boolean;
+  canEditPeople: boolean;
+}
 
-  export let data: { data: { users: UserRecord[]; superAdminEmails: string[] } };
-  const payload = data.data;
+const { data }: { data: { data: { users: UserRecord[]; superAdminEmails: string[] } } } = $props();
+const payload = $derived(data.data);
 
-  let loading = false;
-  let error = "";
+let loading = $state(false);
+let error = $state("");
 
-  const PERMISSIONS = [
-    { key: "canViewTransactions", label: "Transactions" },
-    { key: "canViewRevenueShares", label: "Revenue Shares" },
-    { key: "canViewPersonalData", label: "Personal Data" },
-    { key: "canEditPeople", label: "Edit People" },
-  ] as const;
+const PERMISSIONS = [
+  { key: "canViewTransactions", label: "Transactions" },
+  { key: "canViewRevenueShares", label: "Revenue Shares" },
+  { key: "canViewPersonalData", label: "Personal Data" },
+  { key: "canEditPeople", label: "Edit People" },
+] as const;
 
-  async function togglePermission(email: string, permission: string, value: boolean) {
-    loading = true;
-    error = "";
-    try {
-      const res = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, permission, value }),
-      });
-      if (!res.ok) {
-        const responsePayload = await res.json().catch(() => ({}));
-        throw new Error(responsePayload?.message ?? "Failed to update permission");
-      }
-      await invalidateAll();
-    } catch (e) {
-      error = (e as Error).message ?? "Failed to update permission";
-    } finally {
-      loading = false;
+async function togglePermission(email: string, permission: string, value: boolean) {
+  loading = true;
+  error = "";
+  try {
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, permission, value }),
+    });
+    if (!res.ok) {
+      const responsePayload = await res.json().catch(() => ({}));
+      throw new Error(responsePayload?.message ?? "Failed to update permission");
     }
+    await invalidateAll();
+  } catch (e) {
+    error = (e as Error).message ?? "Failed to update permission";
+  } finally {
+    loading = false;
   }
+}
 
-  async function removeAllPermissions(userEmail: string) {
-    loading = true;
-    error = "";
-    try {
-      const res = await fetch("/api/admin", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: userEmail }),
-      });
-      if (!res.ok) {
-        const responsePayload = await res.json().catch(() => ({}));
-        throw new Error(responsePayload?.message ?? "Failed to remove permissions");
-      }
-      await invalidateAll();
-    } catch (e) {
-      error = (e as Error).message ?? "Failed to remove permissions";
-    } finally {
-      loading = false;
+async function removeAllPermissions(userEmail: string) {
+  loading = true;
+  error = "";
+  try {
+    const res = await fetch("/api/admin", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: userEmail }),
+    });
+    if (!res.ok) {
+      const responsePayload = await res.json().catch(() => ({}));
+      throw new Error(responsePayload?.message ?? "Failed to remove permissions");
     }
+    await invalidateAll();
+  } catch (e) {
+    error = (e as Error).message ?? "Failed to remove permissions";
+  } finally {
+    loading = false;
   }
+}
 </script>
 
 <div class="space-y-6">

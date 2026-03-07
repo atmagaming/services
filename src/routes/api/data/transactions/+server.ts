@@ -1,5 +1,5 @@
-import type { RequestHandler } from "./$types";
 import { getCachedPeople, getCachedTransactions } from "$lib/server/data";
+import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals }) => {
   const canViewTransactions = locals.user?.canViewTransactions ?? false;
@@ -32,7 +32,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   const maskedSet = new Set(maskedPersonIds);
   const maskedTransactions = transactions.map((t) =>
-    t.personId && maskedSet.has(t.personId) ? { ...t, note: "Team Salaries", payeeName: "ATMA Team", category: "Salaries" } : t,
+    t.personId && maskedSet.has(t.personId)
+      ? { ...t, note: "Team Salaries", payeeName: "ATMA Team", category: "Salaries" }
+      : t,
   );
 
   return new Response(

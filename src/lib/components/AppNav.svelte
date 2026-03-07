@@ -1,27 +1,26 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { goto, invalidateAll } from "$app/navigation";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Avatar, AvatarImage, AvatarFallback } from "$lib/components/ui/avatar/index.js";
-  import type { SessionUser } from "$lib/types";
+import { goto, invalidateAll } from "$app/navigation";
+import { page } from "$app/state";
+import { Avatar, AvatarFallback, AvatarImage } from "$lib/components/ui/avatar/index.js";
+import { Button } from "$lib/components/ui/button/index.js";
+import type { SessionUser } from "$lib/types";
 
-  export let user: SessionUser | null = null;
+const { user = null }: { user: SessionUser | null } = $props();
 
-  const links = [
-    { href: "/finances", label: "Overview" },
-    { href: "/transactions", label: "Transactions" },
-    { href: "/people", label: "People" },
-  ];
+const links = [
+  { href: "/finances", label: "Overview" },
+  { href: "/transactions", label: "Transactions" },
+  { href: "/people", label: "People" },
+];
 
-  $: navLinks = user?.isSuperAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
+const navLinks = $derived(user?.isSuperAdmin ? [...links, { href: "/admin", label: "Admin" }] : links);
+const userInitial = $derived((user?.name ?? user?.email ?? "?")[0]?.toUpperCase() ?? "?");
 
-  $: userInitial = (user?.name ?? user?.email ?? "?")[0]?.toUpperCase() ?? "?";
-
-  async function signOut() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    await invalidateAll();
-    await goto("/login");
-  }
+async function signOut() {
+  await fetch("/api/auth/logout", { method: "POST" });
+  await invalidateAll();
+  await goto("/login");
+}
 </script>
 
 <nav class="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
@@ -31,7 +30,7 @@
       {#each navLinks as link}
         <a
           href={link.href}
-          class={$page.url.pathname === link.href
+          class={page.url.pathname === link.href
             ? "rounded-md bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary"
             : "rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"}
         >

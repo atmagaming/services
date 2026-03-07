@@ -1,9 +1,9 @@
-import type { RequestHandler } from "./$types";
 import { compare } from "bcryptjs";
-import { prisma } from "$lib/server/prisma";
-import { getSuperAdminEmails } from "$lib/server/admin";
-import { getCachedPeople } from "$lib/server/data";
+import { superAdminEmails } from "$lib/server/admin";
 import { setSessionCookie } from "$lib/server/auth";
+import { getCachedPeople } from "$lib/server/data";
+import { prisma } from "$lib/server/prisma";
+import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async (event) => {
   const { request, locals } = event;
@@ -32,7 +32,6 @@ export const POST: RequestHandler = async (event) => {
     });
   }
 
-  const superAdminEmails = getSuperAdminEmails();
   const isSuperAdmin = superAdminEmails.includes(email);
 
   let personId: string | null = null;

@@ -1,92 +1,104 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
-  import { PUBLIC_NDA_TEMPLATE_URL, PUBLIC_CONTRACT_TEMPLATE_URL } from "$env/static/public";
-  import ExternalLink from "$lib/components/ExternalLink.svelte";
-  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import type { Person } from "$lib/types";
+import { invalidateAll } from "$app/navigation";
+import { PUBLIC_CONTRACT_TEMPLATE_URL, PUBLIC_NDA_TEMPLATE_URL } from "$env/static/public";
+import CopyButton from "$lib/components/CopyButton.svelte";
+import ExternalLink from "$lib/components/ExternalLink.svelte";
+import * as Dialog from "$lib/components/ui/dialog/index.js";
+import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+import type { Person } from "$lib/types";
 
-  export let person: Person;
-  export let canEdit = false;
-  export let canSign = false;
-  export let missingSigningFields: string[] = [];
+let {
+  person,
+  canEdit = false,
+  canSign = false,
+  missingSigningFields = [],
+  viewingDocUrl = $bindable<string | null>(null),
+}: {
+  person: Person;
+  canEdit?: boolean;
+  canSign?: boolean;
+  missingSigningFields?: string[];
+  viewingDocUrl?: string | null;
+} = $props();
 
-  type DocCategory = "nda" | "contract" | "other";
-  const CATEGORIES: { key: DocCategory; label: string; templateUrl?: string }[] = [
-    { key: "nda", label: "NDA", templateUrl: PUBLIC_NDA_TEMPLATE_URL },
-    { key: "contract", label: "Contract", templateUrl: PUBLIC_CONTRACT_TEMPLATE_URL },
-    { key: "other", label: "Others" },
-  ];
+type DocCategory = "nda" | "contract" | "other";
+const CATEGORIES: { key: DocCategory; label: string; templateUrl?: string }[] = [
+  { key: "nda", label: "NDA", templateUrl: PUBLIC_NDA_TEMPLATE_URL },
+  { key: "contract", label: "Contract", templateUrl: PUBLIC_CONTRACT_TEMPLATE_URL },
+  { key: "other", label: "Others" },
+];
 
-  let uploading: DocCategory | null = null;
-  let uploadErrors: Partial<Record<DocCategory, string>> = {};
-  let fileInputs: Partial<Record<DocCategory, HTMLInputElement>> = {};
-  let dragOver: DocCategory | null = null;
-  let signing: DocCategory | null = null;
-  let signError = "";
-  let signDialogOpen = false;
-  let signDialogCategory: "nda" | "contract" | null = null;
-  let signUrl: string | null = null;
-  export let viewingDocUrl: string | null = null;
+let uploading = $state<DocCategory | null>(null);
+let uploadErrors = $state<Partial<Record<DocCategory, string>>>({});
+let fileInputs = $state<Partial<Record<DocCategory, HTMLInputElement>>>({});
+let dragOver = $state<DocCategory | null>(null);
+let signing = $state<DocCategory | null>(null);
+let signError = $state("");
+let signDialogOpen = $state(false);
+let signDialogCategory = $state<"nda" | "contract" | null>(null);
+let signUrls = $state<{ adminUrl: string; personUrl: string } | null>(null);
 
-  async function uploadFile(file: File, category: DocCategory) {
-    uploading = category;
-    uploadErrors = { ...uploadErrors, [category]: "" };
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("name", file.name);
-      fd.append("category", category);
-      const res = await fetch(`/api/people/${person.id}/documents`, { method: "POST", body: fd });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { message?: string };
-        uploadErrors = { ...uploadErrors, [category]: body.message ?? "Upload failed" };
-        return;
-      }
-      const input = fileInputs[category];
-      if (input) input.value = "";
-      await invalidateAll();
-    } catch (e) {
-      uploadErrors = { ...uploadErrors, [category]: "Upload failed: " + (e as Error).message };
-    } finally {
-      uploading = null;
-    }
-  }
-
-  async function deleteDocument(docId: string) {
-    if (!confirm("Remove this document?")) return;
-    const res = await fetch(`/api/people/${person.id}/documents/${docId}`, { method: "DELETE" });
+async function uploadFile(file: File, category: DocCategory) {
+  uploading = category;
+  uploadErrors = { ...uploadErrors, [category]: "" };
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("name", file.name);
+    fd.append("category", category);
+    const res = await fetch(`/api/people/${person.id}/documents`, { method: "POST", body: fd });
     if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { message?: string };
-      alert(body.message ?? "Failed to delete document");
+      const body = (await res.json().catch(() => ({}))) as { message?: string };
+      uploadErrors = { ...uploadErrors, [category]: body.message ?? "Upload failed" };
       return;
     }
+    const input = fileInputs[category];
+    if (input) input.value = "";
     await invalidateAll();
+  } catch (e) {
+    uploadErrors = { ...uploadErrors, [category]: "Upload failed: " + (e as Error).message };
+  } finally {
+    uploading = null;
   }
+}
 
-  async function signDocument(category: "nda" | "contract") {
-    const existing = person.documents.filter((d) => d.category === category);
-    if (existing.length > 0 && !confirm(`A ${category.toUpperCase()} already exists. Add a new version anyway?`)) return;
-    signing = category;
-    signError = "";
-    signUrl = null;
-    signDialogCategory = category;
-    signDialogOpen = true;
-    try {
-      const res = await fetch(`/api/people/${person.id}/sign`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ category }),
-      });
-      const data = (await res.json()) as { signUrl?: string; message?: string };
-      if (!res.ok) { signError = data.message ?? "Signing failed"; return; }
-      signUrl = data.signUrl ?? null;
-    } catch (e) {
-      signError = "Signing failed: " + (e as Error).message;
-    } finally {
-      signing = null;
-    }
+async function deleteDocument(docId: string) {
+  if (!confirm("Remove this document?")) return;
+  const res = await fetch(`/api/people/${person.id}/documents/${docId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    alert(body.message ?? "Failed to delete document");
+    return;
   }
+  await invalidateAll();
+}
+
+async function signDocument(category: "nda" | "contract") {
+  const existing = person.documents.filter((d) => d.category === category);
+  if (existing.length > 0 && !confirm(`A ${category.toUpperCase()} already exists. Add a new version anyway?`)) return;
+  signing = category;
+  signError = "";
+  signUrls = null;
+  signDialogCategory = category;
+  signDialogOpen = true;
+  try {
+    const res = await fetch(`/api/people/${person.id}/sign`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ category }),
+    });
+    const data = (await res.json()) as { adminUrl?: string; personUrl?: string; message?: string };
+    if (!res.ok) {
+      signError = data.message ?? "Signing failed";
+      return;
+    }
+    if (data.adminUrl && data.personUrl) signUrls = { adminUrl: data.adminUrl, personUrl: data.personUrl };
+  } catch (e) {
+    signError = "Signing failed: " + (e as Error).message;
+  } finally {
+    signing = null;
+  }
+}
 </script>
 
 <section>
@@ -105,14 +117,17 @@
             <Tooltip.Provider>
               <Tooltip.Root>
                 <Tooltip.Trigger>
-                  <button
-                    type="button"
-                    onclick={() => { if (canSign && signing !== key) signDocument(key as "nda" | "contract"); }}
-                    disabled={signing === key}
-                    class="ml-auto rounded px-2 py-0.5 text-xs font-medium transition-colors {canSign ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'cursor-not-allowed bg-muted text-muted-foreground'}"
-                  >
-                    {signing === key ? "Sending…" : "Sign"}
-                  </button>
+                  {#snippet child({ props })}
+                    <button
+                      {...props}
+                      type="button"
+                      onclick={() => { if (canSign && signing !== key) signDocument(key as "nda" | "contract"); }}
+                      disabled={signing === key}
+                      class="ml-auto rounded px-2 py-0.5 text-xs font-medium transition-colors {canSign ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'cursor-not-allowed bg-muted text-muted-foreground'}"
+                    >
+                      {signing === key ? "Sending…" : "Sign"}
+                    </button>
+                  {/snippet}
                 </Tooltip.Trigger>
                 {#if !canSign}
                   <Tooltip.Content side="left" class="max-w-48">
@@ -164,10 +179,12 @@
         </div>
 
         {#if canEdit}
-          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
           <div
+            role="button"
+            tabindex="0"
             class="mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-center transition-colors {dragOver === key ? 'border-primary bg-primary/5' : 'border-border hover:border-ring/50 hover:bg-muted/30'}"
             onclick={() => fileInputs[key]?.click()}
+            onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") fileInputs[key]?.click(); }}
             ondragover={(e) => { e.preventDefault(); dragOver = key; }}
             ondragleave={() => { dragOver = null; }}
             ondrop={(e) => { e.preventDefault(); dragOver = null; const file = e.dataTransfer?.files?.[0]; if (file) uploadFile(file, key); }}
@@ -220,15 +237,17 @@
       </div>
     {:else if signError}
       <p class="py-2 text-sm text-destructive">{signError}</p>
-    {:else if signUrl}
-      <div class="space-y-3 py-2">
-        <p class="text-sm text-muted-foreground">The signing request was sent. Use the link below to sign the document:</p>
-        <a
-          href={signUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="block truncate rounded-md border border-border bg-muted px-3 py-2 text-sm text-primary underline underline-offset-2 hover:bg-muted/70"
-        >{signUrl}</a>
+    {:else if signUrls}
+      <div class="space-y-2 py-2">
+        <p class="text-sm text-muted-foreground">The signing request was sent.</p>
+        <div class="flex items-center gap-2">
+          <ExternalLink href={signUrls.adminUrl} className="flex-1 text-sm">Link for me</ExternalLink>
+          <CopyButton value={signUrls.adminUrl} />
+        </div>
+        <div class="flex items-center gap-2">
+          <ExternalLink href={signUrls.personUrl} className="flex-1 text-sm">Link for them</ExternalLink>
+          <CopyButton value={signUrls.personUrl} />
+        </div>
       </div>
     {/if}
 

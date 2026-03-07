@@ -1,21 +1,24 @@
 <script lang="ts">
-  import type { ChartSeries, RevenueShare } from "$lib/types";
-  import { CHART_COLORS } from "$lib/charts";
-  import StackedAreaChart from "$lib/components/charts/StackedAreaChart.svelte";
+import type { ChartSeries, RevenueShare } from "$lib/types";
+import { CHART_COLORS } from "./chart-colors";
+import StackedAreaChart from "./StackedAreaChart.svelte";
 
-  export let data: RevenueShare[] = [];
+const { data = [] }: { data?: RevenueShare[] } = $props();
 
-  $: names = (() => {
+const names = $derived(
+  (() => {
     const allNames = new Set<string>();
     for (const entry of data) for (const name of Object.keys(entry.shares)) allNames.add(name);
     const latest = data[data.length - 1]?.shares ?? {};
     return [...allNames].sort((a, b) => (latest[b] ?? 0) - (latest[a] ?? 0));
-  })();
+  })(),
+);
 
-  $: lastHistMonth = [...data].reverse().find((e) => !e.isProjected)?.month ?? "";
-  $: months = data.map((d) => d.month);
+const lastHistMonth = $derived([...data].reverse().find((e) => !e.isProjected)?.month ?? "");
+const months = $derived(data.map((d) => d.month));
 
-  $: series = names.map((name, i) => {
+const series = $derived(
+  names.map((name, i) => {
     const dataArr: (number | null)[] = [];
     const projData: (number | null)[] = [];
 
@@ -38,10 +41,11 @@
       data: dataArr,
       projData,
     } satisfies ChartSeries;
-  });
+  }),
+);
 
-  const yAxisFormatter = (v: number) => `${v}%`;
-  const tooltipValueFormatter = (v: number) => `${v.toFixed(1)}%`;
+const yAxisFormatter = (v: number) => `${v}%`;
+const tooltipValueFormatter = (v: number) => `${v.toFixed(1)}%`;
 </script>
 
 <StackedAreaChart

@@ -1,26 +1,31 @@
 <script lang="ts">
-  import { tick } from "svelte";
+import { tick } from "svelte";
 
-  export let value: string;
-  export let placeholder = "";
-  export let className = "";
-  /** When false, empty display state shows nothing instead of placeholder text.
-   *  When true (default), placeholder is shown muted like a real HTML placeholder. */
-  export let showDisplayPlaceholder = true;
+let {
+  value = $bindable(""),
+  placeholder = "",
+  className = "",
+  showDisplayPlaceholder = true,
+}: {
+  value?: string;
+  placeholder?: string;
+  className?: string;
+  showDisplayPlaceholder?: boolean;
+} = $props();
 
-  let editing = false;
-  let inputEl: HTMLInputElement;
+let editing = $state(false);
+let inputEl = $state<HTMLInputElement | null>(null);
 
-  async function startEdit() {
-    editing = true;
-    await tick();
-    inputEl?.focus();
-    inputEl?.select();
-  }
+async function startEdit() {
+  editing = true;
+  await tick();
+  inputEl?.focus();
+  inputEl?.select();
+}
 
-  function stopEdit() {
-    editing = false;
-  }
+function stopEdit() {
+  editing = false;
+}
 </script>
 
 {#if editing}
@@ -28,9 +33,9 @@
     bind:this={inputEl}
     bind:value
     {placeholder}
-    class="[field-sizing:content] bg-transparent outline-none {className}"
+    class="field-sizing-content bg-transparent outline-none {className}"
     onblur={stopEdit}
-    onkeydown={(e) => { if (e.key === "Enter" || e.key === "Escape") inputEl.blur(); }}
+    onkeydown={(e) => { if (e.key === "Enter" || e.key === "Escape") inputEl?.blur(); }}
   />
 {:else}
   <button

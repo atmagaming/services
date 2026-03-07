@@ -1,9 +1,9 @@
 import {
+  GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID,
   GOOGLE_DRIVE_CLIENT_ID,
   GOOGLE_DRIVE_CLIENT_SECRET,
-  GOOGLE_DRIVE_REFRESH_TOKEN,
   GOOGLE_DRIVE_DOCUMENTS_FOLDER,
-  GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID,
+  GOOGLE_DRIVE_REFRESH_TOKEN,
 } from "$env/static/private";
 
 async function getAccessToken(): Promise<string> {
@@ -71,10 +71,9 @@ export async function replaceTextInDoc(documentId: string, replacements: Record<
 
 export async function exportDocAsPdf(documentId: string): Promise<Buffer> {
   const accessToken = await getAccessToken();
-  const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${documentId}/export?mimeType=application/pdf`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${documentId}/export?mimeType=application/pdf`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   if (!res.ok) throw new Error("Failed to export Google Doc as PDF: " + (await res.text()));
   return Buffer.from(await res.arrayBuffer());
 }

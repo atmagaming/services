@@ -1,94 +1,120 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
-  import { tick } from "svelte";
-  import { onMount } from "svelte";
-  import { fly } from "svelte/transition";
-  import type { Person } from "$lib/types";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { Copy, Mail } from "@lucide/svelte";
-  import InlineEdit from "$lib/components/InlineEdit.svelte";
-  import EditableContactItem from "$lib/components/EditableContactItem.svelte";
-  import WeeklySchedule from "$lib/components/WeeklySchedule.svelte";
-  import AvatarUpload from "$lib/components/AvatarUpload.svelte";
-  import PersonRoles from "$lib/components/PersonRoles.svelte";
-  import StatusChangeRow from "$lib/components/StatusChangeRow.svelte";
-  import PersonDocuments from "$lib/components/PersonDocuments.svelte";
-  import DatePicker from "$lib/components/DatePicker.svelte";
-  import * as Select from "$lib/components/ui/select/index.js";
-  import { formatDate } from "$lib/utils";
+import { Mail } from "@lucide/svelte";
+import CopyButton from "$lib/components/CopyButton.svelte";
+import { onMount, tick } from "svelte";
+import { fly } from "svelte/transition";
+import { invalidateAll } from "$app/navigation";
+import AvatarUpload from "$lib/components/AvatarUpload.svelte";
+import DatePicker from "$lib/components/DatePicker.svelte";
+import EditableContactItem from "$lib/components/EditableContactItem.svelte";
+import InlineEdit from "$lib/components/InlineEdit.svelte";
+import PersonDocuments from "$lib/components/PersonDocuments.svelte";
+import PersonRoles from "$lib/components/PersonRoles.svelte";
+import StatusChangeRow from "$lib/components/StatusChangeRow.svelte";
+import { Button } from "$lib/components/ui/button/index.js";
+import { Input } from "$lib/components/ui/input/index.js";
+import * as Select from "$lib/components/ui/select/index.js";
+import WeeklySchedule from "$lib/components/WeeklySchedule.svelte";
+import type { Person } from "$lib/types";
+import "$lib/date-extensions";
 
-  const NOTION_ICON = "/icons/notion.webp";
-  const DISCORD_ICON = "/icons/discord.webp";
-  const TELEGRAM_ICON = "/icons/telegram.webp";
-  const LINKEDIN_ICON = "/icons/linkedin.webp";
+const NOTION_ICON = "/icons/notion.webp";
+const DISCORD_ICON = "/icons/discord.webp";
+const TELEGRAM_ICON = "/icons/telegram.webp";
+const LINKEDIN_ICON = "/icons/linkedin.webp";
 
-  const STATUS_COLORS: Record<string, string> = {
-    working: "bg-green-100 text-green-800",
-    vacation: "bg-blue-100 text-blue-800",
-    sick_leave: "bg-yellow-100 text-yellow-800",
-    inactive: "bg-gray-100 text-gray-500",
+const STATUS_COLORS: Record<string, string> = {
+  working: "bg-green-100 text-green-800",
+  vacation: "bg-blue-100 text-blue-800",
+  sick_leave: "bg-yellow-100 text-yellow-800",
+  inactive: "bg-gray-100 text-gray-500",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  working: "Working",
+  vacation: "Vacation",
+  sick_leave: "Sick Leave",
+  inactive: "Inactive",
+};
+
+const {
+  person = null,
+  canEditPeople = false,
+  onClose = () => {},
+}: {
+  person?: Person | null;
+  canEditPeople?: boolean;
+  onClose?: () => void;
+} = $props();
+
+const isAddMode = $derived(person === null);
+
+function buildForm(p: Person | null) {
+  return {
+    name: p?.name ?? "",
+    firstName: p?.firstName ?? "",
+    lastName: p?.lastName ?? "",
+    email: p?.email ?? "",
+    telegram: p?.telegram ?? "",
+    discord: p?.discord ?? "",
+    linkedin: p?.linkedin ?? "",
+    weeklySchedule: p?.weeklySchedule ?? "4,4,4,4,4,0,0",
+    hourlyRatePaid: p?.hourlyRate.paid ?? 0,
+    hourlyRateAccrued: p?.hourlyRate.accrued ?? 0,
+    identification: {
+      type: p?.identification.type ?? "",
+      number: p?.identification.number ?? "",
+      issueDate: p?.identification.issueDate ?? "",
+      issuingAuthority: p?.identification.issuingAuthority ?? "",
+    },
   };
+}
 
-  const STATUS_LABELS: Record<string, string> = {
-    working: "Working",
-    vacation: "Vacation",
-    sick_leave: "Sick Leave",
-    inactive: "Inactive",
-  };
+interface RoleOption {
+  notionId: string;
+  name: string;
+}
 
-  export let person: Person | null = null;
-  export let canEditPeople = false;
-  export let onClose: () => void = () => {};
+// svelte-ignore state_referenced_locally
+let form = $state(buildForm(person));
+// svelte-ignore state_referenced_locally
+let roles = $state<RoleOption[]>(person?.roles.map((r) => ({ notionId: r.notionId, name: r.name })) ?? []);
+let availableRoles = $state<RoleOption[]>([]);
 
-  $: isAddMode = person === null;
+// Reset form and roles when person changes
+$effect(() => {
+  form = buildForm(person);
+  roles = person?.roles.map((r) => ({ notionId: r.notionId, name: r.name })) ?? [];
+});
 
-  $: form = {
-    name: person?.name ?? "",
-    firstName: person?.firstName ?? "",
-    lastName: person?.lastName ?? "",
-    email: person?.email ?? "",
-    telegramAccount: person?.telegramAccount ?? "",
-    discord: person?.discord ?? "",
-    linkedin: person?.linkedin ?? "",
-    weeklySchedule: person?.weeklySchedule ?? "4,4,4,4,4,0,0",
-    hourlyRatePaid: person?.hourlyRatePaid ?? 0,
-    hourlyRateAccrued: person?.hourlyRateAccrued ?? 0,
-    identification: person?.identification ?? "",
-    passportNumber: person?.passportNumber ?? "",
-    passportIssueDate: person?.passportIssueDate ?? "",
-    passportIssuingAuthority: person?.passportIssuingAuthority ?? "",
-  };
-
-  interface RoleOption { notionId: string; name: string; }
-
-  $: roles = person?.roles.map((r) => ({ notionId: r.notionId, name: r.name })) ?? [];
-  let availableRoles: RoleOption[] = [];
-
-  onMount(async () => {
-    try {
-      const res = await fetch("/api/roles");
-      if (res.ok) {
-        const data = (await res.json()) as { roles: RoleOption[] };
-        availableRoles = data.roles;
-      }
-    } catch (e) {
-      console.error("Failed to fetch roles: " + (e as Error).message);
+onMount(async () => {
+  try {
+    const res = await fetch("/api/roles");
+    if (res.ok) {
+      const data = (await res.json()) as { roles: RoleOption[] };
+      availableRoles = data.roles;
     }
-  });
+  } catch (e) {
+    console.error("Failed to fetch roles: " + (e as Error).message);
+  }
+});
 
-  // ── Auto-save (edit mode only) ────────────────────────────────────────────
+// ── Auto-save (edit mode only) ────────────────────────────────────────────
 
-  let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
-  let autoSaveStatus: "idle" | "saving" | "saved" | "error" = "idle";
-  let savedSnapshot = "";
-  let isInitialized = false;
-  let currentPersonId: string | undefined;
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let autoSaveStatus = $state<"idle" | "saving" | "saved" | "error">("idle");
+let savedSnapshot = $state("");
+let isInitialized = $state(false);
+let currentPersonId = $state<string | undefined>(undefined);
 
-  $: if (person?.id !== currentPersonId) {
+$effect(() => {
+  if (person?.id !== currentPersonId) {
     currentPersonId = person?.id;
     isInitialized = false;
-    if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null; }
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = null;
+    }
     if (!isAddMode && canEditPeople) {
       tick().then(() => {
         savedSnapshot = JSON.stringify({ form, roles });
@@ -96,195 +122,189 @@
       });
     }
   }
+});
 
-  $: if (isInitialized && !isAddMode && canEditPeople && person) {
+$effect(() => {
+  if (isInitialized && !isAddMode && canEditPeople && person) {
     const current = JSON.stringify({ form, roles });
     if (current !== savedSnapshot) scheduleAutoSave();
   }
+});
 
-  function scheduleAutoSave() {
-    if (autoSaveTimer) clearTimeout(autoSaveTimer);
-    autoSaveTimer = setTimeout(doAutoSave, 1000);
-  }
+function scheduleAutoSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(doAutoSave, 1000);
+}
 
-  async function doAutoSave() {
-    if (!person) return;
-    autoSaveTimer = null;
-    autoSaveStatus = "saving";
-    try {
-      const res = await fetch(`/api/people/${person.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, roles }),
-      });
-      if (!res.ok) { autoSaveStatus = "error"; return; }
-      savedSnapshot = JSON.stringify({ form, roles });
-      autoSaveStatus = "saved";
-      setTimeout(() => { if (autoSaveStatus === "saved") autoSaveStatus = "idle"; }, 2000);
-    } catch (e) {
-      console.error("Auto-save failed: " + (e as Error).message);
-      autoSaveStatus = "error";
-    }
-  }
-
-  // ── Manual save (add mode only) ───────────────────────────────────────────
-
-  let saving = false;
-  let saveError = "";
-
-  async function save() {
-    if (!form.name.trim()) { saveError = "Name is required"; return; }
-    saving = true;
-    saveError = "";
-    try {
-      const res = await fetch("/api/people", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, roles }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { message?: string };
-        saveError = body.message ?? "Failed to save";
-        return;
-      }
-      await invalidateAll();
-      onClose();
-    } catch (e) {
-      saveError = "Failed to save: " + (e as Error).message;
-    } finally {
-      saving = false;
-    }
-  }
-
-  // ── Avatar upload ─────────────────────────────────────────────────────────
-
-  let avatarUploading = false;
-  $: currentImage = person?.image ?? "";
-
-  async function uploadAvatar(file: File) {
-    if (!person) return;
-    avatarUploading = true;
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch(`/api/people/${person.id}/image`, { method: "POST", body: fd });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { message?: string };
-        console.error("Avatar upload failed: " + (body.message ?? "unknown"));
-        return;
-      }
-      await invalidateAll();
-    } catch (e) {
-      console.error("Avatar upload failed: " + (e as Error).message);
-    } finally {
-      avatarUploading = false;
-    }
-  }
-
-  // ── Email copy ────────────────────────────────────────────────────────────
-
-  let emailCopied = false;
-  async function copyEmail() {
-    if (!form.email) return;
-    await navigator.clipboard.writeText(form.email);
-    emailCopied = true;
-    setTimeout(() => (emailCopied = false), 1500);
-  }
-
-  $: telegramHref = form.telegramAccount
-    ? `https://t.me/${form.telegramAccount.replace(/^@/, "")}`
-    : null;
-
-  // ── Delete person ─────────────────────────────────────────────────────────
-
-  async function deletePerson() {
-    if (!person || !confirm("Delete this person? This cannot be undone.")) return;
-    const res = await fetch(`/api/people/${person.id}`, { method: "DELETE" });
+async function doAutoSave() {
+  if (!person) return;
+  autoSaveTimer = null;
+  autoSaveStatus = "saving";
+  try {
+    const res = await fetch(`/api/people/${person.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...form, roles }),
+    });
     if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { message?: string };
-      alert(body.message ?? "Failed to delete");
+      autoSaveStatus = "error";
+      return;
+    }
+    savedSnapshot = JSON.stringify({ form, roles });
+    autoSaveStatus = "saved";
+    setTimeout(() => {
+      if (autoSaveStatus === "saved") autoSaveStatus = "idle";
+    }, 2000);
+  } catch (e) {
+    console.error("Auto-save failed: " + (e as Error).message);
+    autoSaveStatus = "error";
+  }
+}
+
+// ── Manual save (add mode only) ───────────────────────────────────────────
+
+let saving = $state(false);
+let saveError = $state("");
+
+async function save() {
+  if (!form.name.trim()) {
+    saveError = "Name is required";
+    return;
+  }
+  saving = true;
+  saveError = "";
+  try {
+    const res = await fetch("/api/people", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...form, roles }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { message?: string };
+      saveError = body.message ?? "Failed to save";
       return;
     }
     await invalidateAll();
     onClose();
+  } catch (e) {
+    saveError = "Failed to save: " + (e as Error).message;
+  } finally {
+    saving = false;
   }
+}
 
-  // ── Status changes ────────────────────────────────────────────────────────
+// ── Avatar upload ─────────────────────────────────────────────────────────
 
-  async function addStatus() {
-    if (!person) return;
-    const res = await fetch(`/api/people/${person.id}/status`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ status: "inactive", date: new Date().toISOString().slice(0, 10) }),
-    });
+let avatarUploading = $state(false);
+const currentImage = $derived(person?.image ?? "");
+
+async function uploadAvatar(file: File) {
+  if (!person) return;
+  avatarUploading = true;
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`/api/people/${person.id}/image`, { method: "POST", body: fd });
     if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { message?: string };
-      alert(body.message ?? "Failed to add status");
+      const body = (await res.json().catch(() => ({}))) as { message?: string };
+      console.error("Avatar upload failed: " + (body.message ?? "unknown"));
       return;
     }
     await invalidateAll();
+  } catch (e) {
+    console.error("Avatar upload failed: " + (e as Error).message);
+  } finally {
+    avatarUploading = false;
   }
+}
 
-  async function updateStatus(statusId: string, field: "status" | "date", value: string) {
-    if (!person) return;
-    const res = await fetch(`/api/people/${person.id}/status/${statusId}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { message?: string };
-      alert(body.message ?? "Failed to update status");
-    }
-    await invalidateAll();
+
+const telegramHref = $derived(form.telegram ? `https://t.me/${form.telegram.replace(/^@/, "")}` : null);
+
+// ── Delete person ─────────────────────────────────────────────────────────
+
+async function deletePerson() {
+  if (!person || !confirm("Delete this person? This cannot be undone.")) return;
+  const res = await fetch(`/api/people/${person.id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    alert(body.message ?? "Failed to delete");
+    return;
   }
+  await invalidateAll();
+  onClose();
+}
 
-  async function deleteStatus(statusId: string) {
-    if (!person) return;
-    const res = await fetch(`/api/people/${person.id}/status/${statusId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { message?: string };
-      alert(body.message ?? "Failed to delete status");
-      return;
-    }
-    await invalidateAll();
+// ── Status changes ────────────────────────────────────────────────────────
+
+async function addStatus() {
+  if (!person) return;
+  const res = await fetch(`/api/people/${person.id}/status`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ status: "inactive", date: new Date().toISOString().slice(0, 10) }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    alert(body.message ?? "Failed to add status");
+    return;
   }
+  await invalidateAll();
+}
 
-  // ── Payment calculations ─────────────────────────────────────────────────
+async function updateStatus(statusId: string, field: "status" | "date", value: string) {
+  if (!person) return;
+  const res = await fetch(`/api/people/${person.id}/status/${statusId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ [field]: value }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    alert(body.message ?? "Failed to update status");
+  }
+  await invalidateAll();
+}
 
-  $: weeklyHours = form.weeklySchedule.split(",").reduce((sum, v) => sum + (parseInt(v) || 0), 0);
-  $: sprintHours = weeklyHours * 2;
-  $: monthlyHours = weeklyHours * (52 / 12);
+async function deleteStatus(statusId: string) {
+  if (!person) return;
+  const res = await fetch(`/api/people/${person.id}/status/${statusId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { message?: string };
+    alert(body.message ?? "Failed to delete status");
+    return;
+  }
+  await invalidateAll();
+}
 
-  $: hourlyTotal = +form.hourlyRatePaid + +form.hourlyRateAccrued;
-  $: sprintPaid = +form.hourlyRatePaid * sprintHours;
-  $: sprintAccrued = +form.hourlyRateAccrued * sprintHours;
-  $: sprintTotal = sprintPaid + sprintAccrued;
-  $: monthlyPaid = +form.hourlyRatePaid * monthlyHours;
-  $: monthlyAccrued = +form.hourlyRateAccrued * monthlyHours;
-  $: monthlyTotal = monthlyPaid + monthlyAccrued;
+// ── Payment calculations ─────────────────────────────────────────────────
 
-  function fmtHourly(n: number) { return n.toFixed(2); }
-  function fmtRate(n: number) { return Math.round(n).toLocaleString(); }
+const weeklyHours = $derived(form.weeklySchedule.split(",").reduce((sum, v) => sum + (parseInt(v) || 0), 0));
+const hourlyTotal = $derived(+form.hourlyRatePaid + +form.hourlyRateAccrued);
 
-  // ── Signing ───────────────────────────────────────────────────────────────
+function fmtHourly(n: number) {
+  return n.toFixed(2);
+}
 
-  $: missingSigningFields = [
+// ── Signing ───────────────────────────────────────────────────────────────
+
+const missingSigningFields = $derived(
+  [
     !form.name.trim() && "Display name",
     !form.firstName.trim() && "First name",
     !form.lastName.trim() && "Last name",
     !form.email.trim() && "Email",
-    !form.passportNumber.trim() && "Passport number",
-    !form.passportIssueDate.trim() && "Passport issue date",
-    !form.passportIssuingAuthority.trim() && "Passport issuing authority",
-  ].filter(Boolean) as string[];
+    !form.identification.number.trim() && "ID number",
+    !form.identification.issueDate.trim() && "ID issue date",
+    !form.identification.issuingAuthority.trim() && "Issuing authority",
+  ].filter(Boolean) as string[],
+);
 
-  $: canSign = missingSigningFields.length === 0;
+const canSign = $derived(missingSigningFields.length === 0);
 
-  // ── PDF viewer ────────────────────────────────────────────────────────────
+// ── PDF viewer ────────────────────────────────────────────────────────────
 
-  let viewingDocUrl: string | null = null;
+let viewingDocUrl = $state<string | null>(null);
 </script>
 
 <!-- Drawer panel -->
@@ -352,12 +372,10 @@
             <span class="flex-1 text-sm text-muted-foreground">—</span>
           {/if}
           {#if form.email}
-            <button type="button" onclick={copyEmail} class="shrink-0 rounded p-0.5 hover:bg-muted" aria-label="Copy email">
-              <Copy class="size-3 {emailCopied ? 'text-green-600' : 'text-muted-foreground'}" />
-            </button>
+            <CopyButton value={form.email} size={3} />
           {/if}
         </div>
-        <EditableContactItem icon={TELEGRAM_ICON} value={form.telegramAccount} href={telegramHref} placeholder="Add Telegram…" readonly={!canEditPeople} onSave={(v) => (form.telegramAccount = v)} onRemove={canEditPeople ? () => (form.telegramAccount = "") : null} />
+        <EditableContactItem icon={TELEGRAM_ICON} value={form.telegram} href={telegramHref} placeholder="Add Telegram…" readonly={!canEditPeople} onSave={(v) => (form.telegram = v)} onRemove={canEditPeople ? () => (form.telegram = "") : null} />
         <EditableContactItem icon={DISCORD_ICON} value={form.discord} href={null} placeholder="Add Discord…" readonly={!canEditPeople} onSave={(v) => (form.discord = v)} onRemove={canEditPeople ? () => (form.discord = "") : null} />
         <EditableContactItem icon={LINKEDIN_ICON} value={form.linkedin} href={form.linkedin || null} placeholder="Add LinkedIn…" readonly={!canEditPeople} onSave={(v) => (form.linkedin = v)} onRemove={canEditPeople ? () => (form.linkedin = "") : null} />
       </div>
@@ -372,8 +390,7 @@
 
       <!-- Payment table -->
       <div class="mt-4 space-y-2">
-        <!-- Hourly rate: editable squarish boxes -->
-      <span class="mb-2 block text-xs font-medium text-muted-foreground">Hourly Rate (USD)</span>
+        <span class="mb-2 block text-xs font-medium text-muted-foreground">Hourly Rate (USD)</span>
         <div class="flex items-center gap-2">
           <div class="flex w-19 flex-col items-center gap-1">
             <div class="flex h-9 w-19 items-center justify-center rounded-md border border-border bg-background shadow-xs">
@@ -408,22 +425,6 @@
             <span class="text-xs text-muted-foreground">Total</span>
           </div>
         </div>
-
-        <!-- Sprint row -->
-        <!-- <div class="flex items-center gap-0">
-          <span class="w-20 text-sm text-muted-foreground">Sprint</span>
-          <span class="text-sm">${fmtRate(sprintPaid)}</span>
-          <span class="text-sm">${fmtRate(sprintAccrued)}</span>
-          <span class="text-sm font-medium">${fmtRate(sprintTotal)}</span>
-        </div> -->
-
-        <!-- Monthly row -->
-        <!-- <div class="flex items-center gap-0">
-          <span class="w-20 text-sm text-muted-foreground">Monthly</span>
-          <span class="text-sm">${fmtRate(monthlyPaid)}</span>
-          <span class="text-sm">${fmtRate(monthlyAccrued)}</span>
-          <span class="text-sm font-medium">${fmtRate(monthlyTotal)}</span>
-        </div> -->
       </div>
     </section>
 
@@ -451,7 +452,7 @@
               <StatusChangeRow statusChange={sc} onUpdate={(field, value) => updateStatus(sc.id, field, value)} onDelete={() => deleteStatus(sc.id)} />
             {:else}
               <div class="flex items-center gap-2 px-2 py-1">
-                <span class="w-32.5 text-sm text-muted-foreground">{formatDate(sc.date)}</span>
+                <span class="w-32.5 text-sm text-muted-foreground">{Date.fromIso(sc.date).toShort()}</span>
                 <span class={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[sc.status] ?? "bg-gray-100 text-gray-500"}`}>
                   {STATUS_LABELS[sc.status] ?? sc.status}
                 </span>
@@ -476,16 +477,15 @@
         <!-- Identification -->
         {#if canEditPeople}
           <div class="flex flex-wrap items-center gap-1.5 text-sm">
-            <Select.Root type="single" value={form.identification || undefined} onValueChange={(v) => (form.identification = v)}>
+            <Select.Root type="single" value={form.identification.type || undefined} onValueChange={(v) => (form.identification.type = v as typeof form.identification.type)}>
               <Select.Trigger
                 class="h-auto w-auto border border-border/50 px-2 py-0.5 text-sm shadow-none hover:bg-muted/50 focus-visible:ring-1 [&>svg]:hidden"
-                style={!form.identification ? "color: var(--muted-foreground)" : ""}
               >
-                {#if form.identification === "passport"}Passport
-                {:else if form.identification === "national_id"}National ID
-                {:else if form.identification === "drivers_license"}Driver's License
-                {:else if form.identification === "residence_permit"}Residence Permit
-                {:else}Id type
+                {#if form.identification.type === "passport"}Passport
+                {:else if form.identification.type === "national_id"}National ID
+                {:else if form.identification.type === "drivers_license"}Driver's License
+                {:else if form.identification.type === "residence_permit"}Residence Permit
+                {:else}<span class="text-muted-foreground/60">ID type</span>
                 {/if}
               </Select.Trigger>
               <Select.Content>
@@ -495,22 +495,22 @@
                 <Select.Item value="residence_permit">Residence Permit</Select.Item>
               </Select.Content>
             </Select.Root>
-            <InlineEdit bind:value={form.passportNumber} placeholder="AB1234567" className="min-w-20 rounded-md border border-border/50 px-2 py-1 text-sm hover:bg-muted/50" />
+            <InlineEdit bind:value={form.identification.number} placeholder="AB1234567" className="min-w-20 rounded-md border border-border/50 px-2 py-1 text-sm hover:bg-muted/50" />
             <span class="text-muted-foreground">issued by</span>
-            <InlineEdit bind:value={form.passportIssuingAuthority} placeholder="Authority" className="min-w-24 rounded-md border border-border/50 px-2 py-1 text-sm hover:bg-muted/50" />
+            <InlineEdit bind:value={form.identification.issuingAuthority} placeholder="Authority" className="min-w-24 rounded-md border border-border/50 px-2 py-1 text-sm hover:bg-muted/50" />
             <span class="text-muted-foreground">on</span>
-            <DatePicker value={form.passportIssueDate} placeholder="date…" onchange={(v) => (form.passportIssueDate = v)} buttonClass="!w-auto border border-border/50" />
+            <DatePicker value={form.identification.issueDate} placeholder="date…" onchange={(v) => (form.identification.issueDate = v)} buttonClass="!w-auto border border-border/50" />
           </div>
         {:else}
           <p class="text-sm leading-relaxed">
-            {#if form.identification === "passport"}Passport
-            {:else if form.identification === "national_id"}National ID
-            {:else if form.identification === "drivers_license"}Driver's License
-            {:else if form.identification === "residence_permit"}Residence Permit
+            {#if form.identification.type === "passport"}Passport
+            {:else if form.identification.type === "national_id"}National ID
+            {:else if form.identification.type === "drivers_license"}Driver's License
+            {:else if form.identification.type === "residence_permit"}Residence Permit
             {:else}—{/if}
-            {#if form.passportNumber}&nbsp;{form.passportNumber}{/if}
-            {#if form.passportIssuingAuthority}&nbsp;<span class="text-muted-foreground">issued by</span> {form.passportIssuingAuthority}{/if}
-            {#if form.passportIssueDate}&nbsp;<span class="text-muted-foreground">on</span> {formatDate(form.passportIssueDate)}{/if}
+            {#if form.identification.number}&nbsp;{form.identification.number}{/if}
+            {#if form.identification.issuingAuthority}&nbsp;<span class="text-muted-foreground">issued by</span> {form.identification.issuingAuthority}{/if}
+            {#if form.identification.issueDate}&nbsp;<span class="text-muted-foreground">on</span> {Date.fromIso(form.identification.issueDate).toShort()}{/if}
           </p>
         {/if}
 

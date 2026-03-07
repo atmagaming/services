@@ -1,7 +1,8 @@
 import "@elumixor/extensions";
+import "$lib/date-extensions";
 import type { Handle } from "@sveltejs/kit";
 import { getSessionUser } from "$lib/server/auth";
-import { logRequest, logError } from "$lib/server/logger";
+import { logError, logRequest } from "$lib/server/logger";
 
 export const handle: Handle = async ({ event, resolve }) => {
   try {

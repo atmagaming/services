@@ -1,6 +1,6 @@
-import type { RequestHandler } from "./$types";
 import { hash } from "bcryptjs";
 import { prisma } from "$lib/server/prisma";
+import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request }) => {
   const { token, password } = (await request.json()) as { token?: string; password?: string };

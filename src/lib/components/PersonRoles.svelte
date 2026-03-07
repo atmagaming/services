@@ -1,20 +1,29 @@
 <script lang="ts">
-  import * as Popover from "$lib/components/ui/popover/index.js";
-  import * as Command from "$lib/components/ui/command/index.js";
+import * as Command from "$lib/components/ui/command/index.js";
+import * as Popover from "$lib/components/ui/popover/index.js";
 
-  interface RoleOption { notionId: string; name: string; }
+interface RoleOption {
+  notionId: string;
+  name: string;
+}
 
-  export let roles: RoleOption[] = [];
-  export let availableRoles: RoleOption[] = [];
-  export let readonly = false;
+let {
+  roles = $bindable<RoleOption[]>([]),
+  availableRoles = [],
+  readonly = false,
+}: {
+  roles?: RoleOption[];
+  availableRoles?: RoleOption[];
+  readonly?: boolean;
+} = $props();
 
-  let open = false;
+let open = $state(false);
 
-  function toggle(role: RoleOption) {
-    const index = roles.findIndex((r) => r.notionId === role.notionId);
-    if (index >= 0) roles = roles.filter((_, i) => i !== index);
-    else roles = [...roles, role];
-  }
+function toggle(role: RoleOption) {
+  const index = roles.findIndex((r) => r.notionId === role.notionId);
+  if (index >= 0) roles = roles.filter((_, i) => i !== index);
+  else roles = [...roles, role];
+}
 </script>
 
 {#if readonly}
@@ -28,8 +37,9 @@
   </div>
 {:else}
   <Popover.Root bind:open>
-    <Popover.Trigger class="w-full text-left">
-      <div class="flex min-h-[38px] flex-wrap gap-1.5 rounded-md border border-input bg-background px-3 py-2 hover:border-ring/50">
+    <Popover.Trigger>
+      {#snippet child({ props })}
+      <div {...props} class="flex min-h-[38px] w-full flex-wrap gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-left hover:border-ring/50">
         {#each roles as role (role.notionId)}
           <span class="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
             {role.name}
@@ -45,6 +55,7 @@
           <span class="text-sm text-muted-foreground">Add roles…</span>
         {/if}
       </div>
+      {/snippet}
     </Popover.Trigger>
     <Popover.Content class="w-64 p-0" align="start">
       <Command.Root>

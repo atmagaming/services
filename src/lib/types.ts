@@ -34,45 +34,51 @@ export interface PersonRole {
   name: string;
 }
 
+export type IdType = "passport" | "national_id" | "drivers_license" | "residence_permit";
+
+export interface Identification {
+  type: IdType | "";
+  number: string;
+  issueDate: string;
+  issuingAuthority: string;
+}
+
+export class Rates {
+  constructor(
+    public paid: number,
+    public accrued: number,
+  ) {}
+  get total() {
+    return this.paid + this.accrued;
+  }
+}
+
 export interface Person {
   id: string;
   name: string;
   firstName: string;
   lastName: string;
-  nickname: string;
   image: string;
-  identification: string;
-  passportNumber: string;
-  passportIssueDate: string;
-  passportIssuingAuthority: string;
+  identification: Identification;
   weeklySchedule: string;
-  hourlyRatePaid: number;
-  hourlyRateAccrued: number;
+  schedule: number[];
+  hoursPerWeek: number;
+  hourlyRate: Rates;
+  monthlyPaid: number;
+  monthlyAccrued: number;
+  monthlyTotal: number;
+  startDate: string | null;
+  endDate: string | null;
+  status: string;
   email: string;
   notionPersonPageId: string;
-  telegramAccount: string;
+  telegram: string;
   discord: string;
   linkedin: string;
   description: string;
   statusChanges: PersonStatusChange[];
   documents: PersonDocument[];
   roles: PersonRole[];
-}
-
-export interface SensitiveData {
-  id: string;
-  name: string;
-  personId: string;
-  hourlyPaid: number;
-  hourlyInvested: number;
-  schedule: number[];
-  hoursPerWeek: number;
-  monthlyPaid: number;
-  monthlyInvested: number;
-  monthlyTotal: number;
-  startDate: string | null;
-  endDate: string | null;
-  status: string;
 }
 
 export interface MonthlyExpense {

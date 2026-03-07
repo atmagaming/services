@@ -1,41 +1,41 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/index.js";
+import { page } from "$app/state";
+import { Button } from "$lib/components/ui/button/index.js";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+import { Input } from "$lib/components/ui/input/index.js";
 
-  $: token = $page.url.searchParams.get("token") ?? "";
-  let password = "";
-  let confirmPassword = "";
-  let error = "";
-  let success = false;
-  let loading = false;
+const token = $derived(page.url.searchParams.get("token") ?? "");
+let password = $state("");
+let confirmPassword = $state("");
+let error = $state("");
+let success = $state(false);
+let loading = $state(false);
 
-  async function handleSubmit() {
-    error = "";
+async function handleSubmit() {
+  error = "";
 
-    if (password !== confirmPassword) {
-      error = "Passwords do not match";
+  if (password !== confirmPassword) {
+    error = "Passwords do not match";
+    return;
+  }
+
+  loading = true;
+  try {
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    if (!res.ok) {
+      const responsePayload = await res.json().catch(() => ({}));
+      error = responsePayload?.message ?? "Something went wrong. Please try again.";
       return;
     }
-
-    loading = true;
-    try {
-      const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
-      if (!res.ok) {
-        const responsePayload = await res.json().catch(() => ({}));
-        error = responsePayload?.message ?? "Something went wrong. Please try again.";
-        return;
-      }
-      success = true;
-    } finally {
-      loading = false;
-    }
+    success = true;
+  } finally {
+    loading = false;
   }
+}
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-purple-50/30 px-4">
@@ -60,7 +60,7 @@
           <p class="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p>
         {/if}
 
-        <form class="space-y-3" on:submit|preventDefault={handleSubmit}>
+        <form class="space-y-3" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <Input bind:value={password} type="password" placeholder="New password" required minlength={8} />
           <Input bind:value={confirmPassword} type="password" placeholder="Confirm password" required minlength={8} />
           <Button type="submit" class="w-full" disabled={loading}>{loading ? "Please wait..." : "Reset Password"}</Button>

@@ -1,48 +1,53 @@
 <script lang="ts">
-  import { tick } from "svelte";
+import { tick } from "svelte";
 
-  export let value: string; // "4,4,4,4,4,0,0"
-  export let readonly = false;
+let {
+  value = $bindable("4,4,4,4,4,0,0"),
+  readonly = false,
+}: {
+  value?: string;
+  readonly?: boolean;
+} = $props();
 
-  const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-  let inputs: HTMLInputElement[] = [];
+let inputs = $state<HTMLInputElement[]>([]);
 
-  $: parts = value.split(",").map((v) => v.trim());
-  $: total = parts.reduce((sum, v) => sum + (parseInt(v) || 0), 0);
+const parts = $derived(value.split(",").map((v) => v.trim()));
+const total = $derived(parts.reduce((sum, v) => sum + (parseInt(v) || 0), 0));
 
-  function setValue(index: number, digit: string) {
-    const updated = [...parts];
-    updated[index] = digit;
-    value = updated.join(",");
+function setValue(index: number, digit: string) {
+  const updated = [...parts];
+  updated[index] = digit;
+  value = updated.join(",");
+}
+
+function handleInput(index: number, e: Event) {
+  const input = e.target as HTMLInputElement;
+  const raw = input.value.replace(/[^0-9]/g, "").slice(-1);
+  setValue(index, raw);
+  input.value = raw;
+  if (raw && index < 6) inputs[index + 1]?.focus();
+}
+
+function handleKeydown(index: number, e: KeyboardEvent) {
+  if (e.key === "ArrowRight") {
+    e.preventDefault();
+    if (index < 6) inputs[index + 1]?.focus();
+  } else if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    if (index > 0) inputs[index - 1]?.focus();
+  } else if (e.key === "Backspace") {
+    e.preventDefault();
+    setValue(index, "0");
+    if (index > 0) inputs[index - 1]?.focus();
   }
+}
 
-  function handleInput(index: number, e: Event) {
-    const input = e.target as HTMLInputElement;
-    const raw = input.value.replace(/[^0-9]/g, "").slice(-1);
-    setValue(index, raw);
-    input.value = raw;
-    if (raw && index < 6) inputs[index + 1]?.focus();
-  }
-
-  function handleKeydown(index: number, e: KeyboardEvent) {
-    if (e.key === "ArrowRight") {
-      e.preventDefault();
-      if (index < 6) inputs[index + 1]?.focus();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      if (index > 0) inputs[index - 1]?.focus();
-    } else if (e.key === "Backspace") {
-      e.preventDefault();
-      setValue(index, "0");
-      if (index > 0) inputs[index - 1]?.focus();
-    }
-  }
-
-  async function handleFocus(index: number) {
-    await tick();
-    inputs[index]?.select();
-  }
+async function handleFocus(index: number) {
+  await tick();
+  inputs[index]?.select();
+}
 </script>
 
 <div class="flex w-full items-end gap-2">

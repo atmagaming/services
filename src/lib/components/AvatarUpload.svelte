@@ -1,18 +1,28 @@
 <script lang="ts">
-  export let src: string;
-  export let initials: string;
-  export let canEdit = false;
-  export let uploading = false;
-  export let onUpload: (file: File) => void = () => {};
+const {
+  src,
+  initials,
+  canEdit = false,
+  uploading = false,
+  onUpload = () => {},
+}: {
+  src: string;
+  initials: string;
+  canEdit?: boolean;
+  uploading?: boolean;
+  onUpload?: (file: File) => void;
+} = $props();
 
-  let fileInput: HTMLInputElement;
-  let dragOver = false;
+let fileInput = $state<HTMLInputElement | null>(null);
+let dragOver = $state(false);
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
+  role="button"
+  tabindex={canEdit ? 0 : -1}
   class="group relative size-10 shrink-0 {canEdit ? 'cursor-pointer' : ''}"
   onclick={() => { if (canEdit) fileInput?.click(); }}
+  onkeydown={(e) => { if (canEdit && (e.key === "Enter" || e.key === " ")) fileInput?.click(); }}
   ondragover={(e) => { if (canEdit) { e.preventDefault(); dragOver = true; } }}
   ondragleave={() => { dragOver = false; }}
   ondrop={(e) => { e.preventDefault(); dragOver = false; const file = e.dataTransfer?.files?.[0]; if (file && canEdit) onUpload(file); }}

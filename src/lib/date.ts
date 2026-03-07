@@ -1,25 +1,24 @@
+import "$lib/date-extensions";
+
 const PAYMENT_CUTOFF_DAY = 10;
 
-export function formatMonth(year: number, month: number): string {
-  return `${year}-${String(month + 1).padStart(2, "0")}`;
+function toMonthStr(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export function parseMonth(monthStr: string): [number, number] {
-  const parts = monthStr.split("-").map(Number);
-  return [parts[0] ?? 0, (parts[1] ?? 1) - 1];
+function monthStrToDate(m: string): Date {
+  const [year, month] = m.split("-").map(Number);
+  return new Date(year ?? 0, (month ?? 1) - 1, 1);
 }
 
 export function addMonths(monthStr: string, n: number): string {
-  const [y, m] = parseMonth(monthStr);
-  const d = new Date(y, m + n, 1);
-  return formatMonth(d.getFullYear(), d.getMonth());
+  return toMonthStr(monthStrToDate(monthStr).add(n, "month"));
 }
 
 export function getLastConfirmedMonth(): string {
   const now = new Date();
   const monthsBack = now.getDate() > PAYMENT_CUTOFF_DAY ? 1 : 2;
-  const date = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1);
-  return formatMonth(date.getFullYear(), date.getMonth());
+  return toMonthStr(now.add(-monthsBack, "month"));
 }
 
 export function getMonthRange(start: string, end: string): string[] {

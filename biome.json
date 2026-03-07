@@ -1,18 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
-    "includes": [
-      "server/**",
-      "composables/**",
-      "middleware/**",
-      "types/**",
-      "*.ts",
-      "*.json",
-      "!.claude",
-      "!.nuxt",
-      "!.output",
-      "!generated"
-    ],
+    "includes": ["src/**", "scripts/**", "*.ts", "*.json", "!.claude", "!.nuxt", "!.output", "!generated"],
     "ignoreUnknown": true
   },
   "linter": {

@@ -1,85 +1,86 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/index.js";
-  import { Separator } from "$lib/components/ui/separator/index.js";
+import { goto, invalidateAll } from "$app/navigation";
+import { Button } from "$lib/components/ui/button/index.js";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+import { Input } from "$lib/components/ui/input/index.js";
+import { Separator } from "$lib/components/ui/separator/index.js";
 
-  type Mode = "login" | "register" | "forgot-password";
+type Mode = "login" | "register" | "forgot-password";
 
-  let mode: Mode = "login";
-  let email = "";
-  let password = "";
-  let name = "";
-  let error = "";
-  let success = "";
-  let loading = false;
+let mode = $state<Mode>("login");
+let email = $state("");
+let password = $state("");
+let name = $state("");
+let error = $state("");
+let success = $state("");
+let loading = $state(false);
 
-  $: title = mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : "Reset Password";
-  $: description =
-    mode === "login"
-      ? "Welcome back. Sign in to your account."
-      : mode === "register"
-        ? "Create a new account to get started."
-        : "Enter your email and we'll send a reset link.";
+const title = $derived(mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : "Reset Password");
+const description = $derived(
+  mode === "login"
+    ? "Welcome back. Sign in to your account."
+    : mode === "register"
+      ? "Create a new account to get started."
+      : "Enter your email and we'll send a reset link.",
+);
 
-  async function handleSubmit() {
-    error = "";
-    success = "";
-    loading = true;
+async function handleSubmit() {
+  error = "";
+  success = "";
+  loading = true;
 
-    try {
-      if (mode === "login") {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        if (!res.ok) throw new Error();
-        await invalidateAll();
-        await goto("/");
-      } else if (mode === "register") {
-        const registerRes = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email, password, name }),
-        });
-        if (!registerRes.ok) {
-          const payload = await registerRes.json().catch(() => ({}));
-          throw new Error(payload?.message ?? "Registration failed");
-        }
-
-        const loginRes = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        if (!loginRes.ok) throw new Error("Invalid email or password");
-        await invalidateAll();
-        await goto("/");
-      } else {
-        const res = await fetch("/api/auth/forgot-password", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        if (!res.ok) throw new Error();
-        success = "If that email exists, a reset link has been sent.";
+  try {
+    if (mode === "login") {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) throw new Error();
+      await invalidateAll();
+      await goto("/");
+    } else if (mode === "register") {
+      const registerRes = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      });
+      if (!registerRes.ok) {
+        const payload = await registerRes.json().catch(() => ({}));
+        throw new Error(payload?.message ?? "Registration failed");
       }
-    } catch (e) {
-      if (mode === "login") error = "Invalid email or password";
-      else if (mode === "register") error = (e as Error).message ?? "Registration failed";
-      else error = "Something went wrong. Please try again.";
-    } finally {
-      loading = false;
-    }
-  }
 
-  function switchMode(newMode: Mode) {
-    mode = newMode;
-    error = "";
-    success = "";
+      const loginRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!loginRes.ok) throw new Error("Invalid email or password");
+      await invalidateAll();
+      await goto("/");
+    } else {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      success = "If that email exists, a reset link has been sent.";
+    }
+  } catch (e) {
+    if (mode === "login") error = "Invalid email or password";
+    else if (mode === "register") error = (e as Error).message ?? "Registration failed";
+    else error = "Something went wrong. Please try again.";
+  } finally {
+    loading = false;
   }
+}
+
+function switchMode(newMode: Mode) {
+  mode = newMode;
+  error = "";
+  success = "";
+}
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-purple-50/30 px-4">
@@ -97,7 +98,7 @@
         <p class="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">{success}</p>
       {/if}
 
-      <form class="space-y-3" on:submit|preventDefault={handleSubmit}>
+      <form class="space-y-3" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
         {#if mode === "register"}
           <Input bind:value={name} type="text" placeholder="Name" />
         {/if}
@@ -131,18 +132,18 @@
 
       <div class="flex justify-between text-xs text-muted-foreground">
         {#if mode === "login"}
-          <button type="button" class="transition-colors hover:text-primary" on:click={() => switchMode("register")}>
+          <button type="button" class="transition-colors hover:text-primary" onclick={() => switchMode("register")}>
             Create account
           </button>
           <button
             type="button"
             class="transition-colors hover:text-primary"
-            on:click={() => switchMode("forgot-password")}
+            onclick={() => switchMode("forgot-password")}
           >
             Forgot password?
           </button>
         {:else}
-          <button type="button" class="transition-colors hover:text-primary" on:click={() => switchMode("login")}>
+          <button type="button" class="transition-colors hover:text-primary" onclick={() => switchMode("login")}>
             Back to sign in
           </button>
         {/if}

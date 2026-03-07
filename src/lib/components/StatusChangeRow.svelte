@@ -1,33 +1,42 @@
 <script lang="ts">
-  import * as Select from "$lib/components/ui/select/index.js";
-  import DatePicker from "$lib/components/DatePicker.svelte";
+import DatePicker from "$lib/components/DatePicker.svelte";
+import * as Select from "$lib/components/ui/select/index.js";
 
-  export let statusChange: { id: string; date: string; status: string };
-  export let onUpdate: (field: "status" | "date", value: string) => void;
-  export let onDelete: () => void;
+const {
+  statusChange,
+  onUpdate,
+  onDelete,
+}: {
+  statusChange: { id: string; date: string; status: string };
+  onUpdate: (field: "status" | "date", value: string) => void;
+  onDelete: () => void;
+} = $props();
 
-  const STATUS_LABELS: Record<string, string> = {
-    working: "Working",
-    vacation: "Vacation",
-    sick_leave: "Sick Leave",
-    inactive: "Inactive",
-  };
+const STATUS_LABELS: Record<string, string> = {
+  working: "Working",
+  vacation: "Vacation",
+  sick_leave: "Sick Leave",
+  inactive: "Inactive",
+};
 
-  const STATUS_COLORS: Record<string, string> = {
-    working: "bg-green-100 text-green-800",
-    vacation: "bg-blue-100 text-blue-800",
-    sick_leave: "bg-yellow-100 text-yellow-800",
-    inactive: "bg-gray-100 text-gray-500",
-  };
+const STATUS_COLORS: Record<string, string> = {
+  working: "bg-green-100 text-green-800",
+  vacation: "bg-blue-100 text-blue-800",
+  sick_leave: "bg-yellow-100 text-yellow-800",
+  inactive: "bg-gray-100 text-gray-500",
+};
 
-  // Local state so Select always reflects the correct value immediately
-  let localStatus = statusChange.status;
-  $: localStatus = statusChange.status;
+// svelte-ignore state_referenced_locally
+let localStatus = $state(statusChange.status);
 
-  function handleStatusChange(value: string) {
-    localStatus = value;
-    onUpdate("status", value);
-  }
+$effect(() => {
+  localStatus = statusChange.status;
+});
+
+function handleStatusChange(value: string) {
+  localStatus = value;
+  onUpdate("status", value);
+}
 </script>
 
 <div class="group flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted/40">

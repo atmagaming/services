@@ -1,11 +1,11 @@
-import type { RequestHandler } from "./$types";
-import { randomBytes, createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { env } from "$env/dynamic/private";
 import { env as publicEnv } from "$env/dynamic/public";
-import { prisma } from "$lib/server/prisma";
-import { getSuperAdminEmails } from "$lib/server/admin";
-import { getCachedPeople } from "$lib/server/data";
+import { superAdminEmails } from "$lib/server/admin";
 import { setSessionCookie } from "$lib/server/auth";
+import { getCachedPeople } from "$lib/server/data";
+import { prisma } from "$lib/server/prisma";
+import type { RequestHandler } from "./$types";
 
 function base64url(input: Buffer) {
   return input.toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
@@ -90,12 +90,17 @@ export const GET: RequestHandler = async (event) => {
     create: { email, name, image },
   });
 
-  const superAdminEmails = getSuperAdminEmails();
   const isSuperAdmin = superAdminEmails.includes(email);
 
   const dbUser = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, canViewTransactions: true, canViewRevenueShares: true, canViewPersonalData: true, canEditPeople: true },
+    select: {
+      id: true,
+      canViewTransactions: true,
+      canViewRevenueShares: true,
+      canViewPersonalData: true,
+      canEditPeople: true,
+    },
   });
 
   let personId: string | null = null;

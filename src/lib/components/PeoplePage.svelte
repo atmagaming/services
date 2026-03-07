@@ -1,59 +1,66 @@
 <script lang="ts">
-  import { pushState, replaceState } from "$app/navigation";
-  import type { Person } from "$lib/types";
-  import PeopleGrid from "$lib/components/PeopleGrid.svelte";
-  import PeopleTable from "$lib/components/PeopleTable.svelte";
-  import PersonDrawer from "$lib/components/PersonDrawer.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+import { pushState, replaceState } from "$app/navigation";
+import PeopleGrid from "$lib/components/PeopleGrid.svelte";
+import PeopleTable from "$lib/components/PeopleTable.svelte";
+import PersonDrawer from "$lib/components/PersonDrawer.svelte";
+import { Button } from "$lib/components/ui/button/index.js";
+import type { Person } from "$lib/types";
 
-  export let data: {
+const {
+  data,
+}: {
+  data: {
     people: Person[];
     canViewPersonalData: boolean;
     canEditPeople: boolean;
     personId?: string;
   };
+} = $props();
 
-  const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
+const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
 
-  function isActive(person: Person): boolean {
-    const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
-    const latest = sorted.at(-1);
-    return latest !== undefined && ACTIVE_STATUSES.has(latest.status);
-  }
+function isActive(person: Person): boolean {
+  const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
+  const latest = sorted.at(-1);
+  return latest !== undefined && ACTIVE_STATUSES.has(latest.status);
+}
 
-  $: activePeople = data.people.filter(isActive);
-  $: inactivePeople = data.people.filter((p) => !isActive(p));
+const activePeople = $derived(data.people.filter(isActive));
+const inactivePeople = $derived(data.people.filter((p) => !isActive(p)));
 
-  let activeTab: "active" | "inactive" = "active";
-  $: displayedPeople = activeTab === "active" ? activePeople : inactivePeople;
+let activeTab = $state<"active" | "inactive">("active");
+const displayedPeople = $derived(activeTab === "active" ? activePeople : inactivePeople);
 
-  // Track by ID so drawerPerson auto-updates when data.people refreshes
-  let selectedPersonId: string | null | undefined =
-    data.personId !== undefined ? data.personId : undefined;
+// Initialize from URL param once; managed independently after that
+// svelte-ignore state_referenced_locally
+let selectedPersonId = $state<string | null | undefined>(data.personId !== undefined ? data.personId : undefined);
 
-  $: drawerPerson =
-    selectedPersonId === undefined ? undefined :
-    selectedPersonId === null ? null :
-    data.people.find((p) => p.id === selectedPersonId);
+const drawerPerson = $derived(
+  selectedPersonId === undefined
+    ? undefined
+    : selectedPersonId === null
+      ? null
+      : data.people.find((p) => p.id === selectedPersonId),
+);
 
-  $: drawerOpen = drawerPerson !== undefined;
+const drawerOpen = $derived(drawerPerson !== undefined);
 
-  function openAddDrawer() {
-    selectedPersonId = null;
-    pushState("/people/new", {});
-  }
+function openAddDrawer() {
+  selectedPersonId = null;
+  pushState("/people/new", {});
+}
 
-  function openEditDrawer(person: Person) {
-    const isSwitch = drawerPerson !== undefined;
-    selectedPersonId = person.id;
-    if (isSwitch) replaceState(`/people/${person.id}`, {});
-    else pushState(`/people/${person.id}`, {});
-  }
+function openEditDrawer(person: Person) {
+  const isSwitch = drawerPerson !== undefined;
+  selectedPersonId = person.id;
+  if (isSwitch) replaceState(`/people/${person.id}`, {});
+  else pushState(`/people/${person.id}`, {});
+}
 
-  function closeDrawer() {
-    selectedPersonId = undefined;
-    replaceState("/people", {});
-  }
+function closeDrawer() {
+  selectedPersonId = undefined;
+  replaceState("/people", {});
+}
 </script>
 
 <!-- Page header -->

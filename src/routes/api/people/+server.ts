@@ -1,7 +1,7 @@
-import type { RequestHandler } from "./$types";
-import { prisma } from "$lib/server/prisma";
 import { getCachedPeople, invalidateCache, isPersonActive } from "$lib/server/data";
 import { createPersonNotionPage } from "$lib/server/notion";
+import { prisma } from "$lib/server/prisma";
+import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals }) => {
   const canViewPersonalData = locals.user?.canViewPersonalData ?? false;
@@ -15,7 +15,6 @@ export const GET: RequestHandler = async ({ locals }) => {
   const activePeople = people.filter(isPersonActive).map((p) => ({
     id: p.id,
     name: p.name,
-    nickname: p.nickname,
     image: p.image,
     roles: p.roles,
     statusChanges: p.statusChanges,
@@ -33,17 +32,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     name?: string;
     firstName?: string;
     lastName?: string;
-    nickname?: string;
     image?: string;
-    identification?: string;
-    passportNumber?: string;
-    passportIssueDate?: string;
-    passportIssuingAuthority?: string;
+    identification?: { type?: string; number?: string; issueDate?: string; issuingAuthority?: string };
     weeklySchedule?: string;
     hourlyRatePaid?: number;
     hourlyRateAccrued?: number;
     email?: string;
-    telegramAccount?: string;
+    telegram?: string;
     discord?: string;
     linkedin?: string;
     description?: string;
@@ -59,27 +54,24 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       name: body.name,
       firstName: body.firstName ?? "",
       lastName: body.lastName ?? "",
-      nickname: body.nickname ?? "",
       image: body.image ?? "",
-      identification: body.identification ?? "",
-      passportNumber: body.passportNumber ?? "",
-      passportIssueDate: body.passportIssueDate ?? "",
-      passportIssuingAuthority: body.passportIssuingAuthority ?? "",
+      identification: body.identification?.type ?? "",
+      passportNumber: body.identification?.number ?? "",
+      passportIssueDate: body.identification?.issueDate ?? "",
+      passportIssuingAuthority: body.identification?.issuingAuthority ?? "",
       weeklySchedule: body.weeklySchedule ?? "4,4,4,4,4,0,0",
       hourlyRatePaid: body.hourlyRatePaid ?? 0,
       hourlyRateAccrued: body.hourlyRateAccrued ?? 0,
       email: body.email ?? "",
       notionPersonPageId: await createPersonNotionPage(body.name, body.image).catch(() => ""),
-      telegramAccount: body.telegramAccount ?? "",
+      telegramAccount: body.telegram ?? "",
       discord: body.discord ?? "",
       linkedin: body.linkedin ?? "",
       description: body.description ?? "",
       statusChanges: {
         create: { date: new Date().toISOString().slice(0, 10), status: "inactive" },
       },
-      roles: body.roles?.length
-        ? { create: body.roles.map(({ notionId, name }) => ({ notionId, name })) }
-        : undefined,
+      roles: body.roles?.length ? { create: body.roles.map(({ notionId, name }) => ({ notionId, name })) } : undefined,
     },
     include: { statusChanges: true, documents: true, roles: true },
   });

@@ -1,49 +1,56 @@
 <script lang="ts">
-  import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/index.js";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
 
-  interface TableRowData {
-    personId: string;
-    name: string;
-    hoursPerWeek: number;
-    paidRate: number;
-    investedRate: number;
-    monthlyPaid: number;
-    monthlyAccrued: number;
-    monthlyTotal: number;
-    currentInvestment: number;
-    currentShare: number;
-    projectedShare: number;
-    isCurrentUser: boolean;
-  }
+interface TableRowData {
+  personId: string;
+  name: string;
+  hoursPerWeek: number;
+  paidRate: number;
+  investedRate: number;
+  monthlyPaid: number;
+  monthlyAccrued: number;
+  monthlyTotal: number;
+  currentInvestment: number;
+  currentShare: number;
+  projectedShare: number;
+  isCurrentUser: boolean;
+}
 
-  export let rows: TableRowData[] = [];
-  export let currentPersonId: string | null = null;
-  export let isAdmin = false; // true when user has canViewRevenueShares
-  export let isAuthenticated = false;
-  export let teamCount = 0;
+const {
+  rows = [],
+  currentPersonId = null,
+  isAdmin = false,
+  isAuthenticated = false,
+  teamCount = 0,
+}: {
+  rows?: TableRowData[];
+  currentPersonId?: string | null;
+  isAdmin?: boolean;
+  isAuthenticated?: boolean;
+  teamCount?: number;
+} = $props();
 
-  $: myRows = currentPersonId ? rows.filter((r) => r.isCurrentUser) : [];
-  $: otherRows = rows.filter((r) => !r.isCurrentUser);
-  $: othersCount = new Set(otherRows.map((r) => r.personId)).size;
+const myRows = $derived(currentPersonId ? rows.filter((r) => r.isCurrentUser) : []);
+const otherRows = $derived(rows.filter((r) => !r.isCurrentUser));
+const othersCount = $derived(new Set(otherRows.map((r) => r.personId)).size);
 
-  function aggregateRows(rowSet: TableRowData[]) {
-    const totalHours = rowSet.reduce((s, r) => s + r.hoursPerWeek, 0);
-    return {
-      hoursPerWeek: totalHours,
-      paidRate: totalHours > 0 ? rowSet.reduce((s, r) => s + r.hoursPerWeek * r.paidRate, 0) / totalHours : 0,
-      investedRate:
-        totalHours > 0 ? rowSet.reduce((s, r) => s + r.hoursPerWeek * r.investedRate, 0) / totalHours : 0,
-      monthlyPaid: rowSet.reduce((s, r) => s + r.monthlyPaid, 0),
-      monthlyAccrued: rowSet.reduce((s, r) => s + r.monthlyAccrued, 0),
-      monthlyTotal: rowSet.reduce((s, r) => s + r.monthlyTotal, 0),
-      currentInvestment: rowSet.reduce((s, r) => s + r.currentInvestment, 0),
-      currentShare: rowSet.reduce((s, r) => s + r.currentShare, 0),
-      projectedShare: rowSet.reduce((s, r) => s + r.projectedShare, 0),
-    };
-  }
+function aggregateRows(rowSet: TableRowData[]) {
+  const totalHours = rowSet.reduce((s, r) => s + r.hoursPerWeek, 0);
+  return {
+    hoursPerWeek: totalHours,
+    paidRate: totalHours > 0 ? rowSet.reduce((s, r) => s + r.hoursPerWeek * r.paidRate, 0) / totalHours : 0,
+    investedRate: totalHours > 0 ? rowSet.reduce((s, r) => s + r.hoursPerWeek * r.investedRate, 0) / totalHours : 0,
+    monthlyPaid: rowSet.reduce((s, r) => s + r.monthlyPaid, 0),
+    monthlyAccrued: rowSet.reduce((s, r) => s + r.monthlyAccrued, 0),
+    monthlyTotal: rowSet.reduce((s, r) => s + r.monthlyTotal, 0),
+    currentInvestment: rowSet.reduce((s, r) => s + r.currentInvestment, 0),
+    currentShare: rowSet.reduce((s, r) => s + r.currentShare, 0),
+    projectedShare: rowSet.reduce((s, r) => s + r.projectedShare, 0),
+  };
+}
 
-  $: othersAgg = aggregateRows(otherRows);
-  $: teamAgg = aggregateRows(rows);
+const othersAgg = $derived(aggregateRows(otherRows));
+const teamAgg = $derived(aggregateRows(rows));
 </script>
 
 <div class="rounded-xl border border-border bg-card shadow-sm">
@@ -188,10 +195,10 @@
           <TableCell class="px-4 py-3 text-sm font-semibold">Total ({teamCount})</TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
-            ${teamAgg.paidRate}/hr
+            ${Math.round(teamAgg.paidRate)}/hr
           </TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
-            ${teamAgg.investedRate}/hr
+            ${Math.round(teamAgg.investedRate)}/hr
           </TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>

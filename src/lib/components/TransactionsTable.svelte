@@ -1,67 +1,73 @@
 <script lang="ts">
-  import type { Transaction } from "$lib/types";
-  import NativeSelect from "$lib/components/ui/native-select.svelte";
-  import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
+import * as Select from "$lib/components/ui/select/index.js";
+import type { Transaction } from "$lib/types";
+import "$lib/date-extensions";
+import { Badge } from "$lib/components/ui/badge/index.js";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
 
-  export let transactions: Transaction[] = [];
-  export let highlightPersonIds: string[] = [];
-  export let maskedPersonIds: string[] = [];
+const {
+  transactions = [],
+  highlightPersonIds = [],
+  maskedPersonIds = [],
+}: {
+  transactions?: Transaction[];
+  highlightPersonIds?: string[];
+  maskedPersonIds?: string[];
+} = $props();
 
-  let methodFilter = "all";
-  let categoryFilter = "all";
-  let tooltip: { x: number; y: number } | null = null;
-  let tooltipTimeout: ReturnType<typeof setTimeout> | undefined;
+let methodFilter = $state("all");
+let categoryFilter = $state("all");
+let tooltip = $state<{ x: number; y: number } | null>(null);
+let tooltipTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  $: highlightSet = new Set(highlightPersonIds);
-  $: maskedSet = new Set(maskedPersonIds);
+const highlightSet = $derived(new Set(highlightPersonIds));
+const maskedSet = $derived(new Set(maskedPersonIds));
 
-  $: categories = [...new Set(transactions.map((t) => t.category).filter(Boolean))].sort();
-  const methods = ["Paid", "Accrued", "Invested"];
+const categories = $derived([...new Set(transactions.map((t) => t.category).filter(Boolean))].sort());
+const methods = ["Paid", "Accrued", "Invested"];
 
-  $: filtered = (() => {
+const filtered = $derived(
+  (() => {
     let result = transactions;
     if (methodFilter !== "all") result = result.filter((t) => t.method === methodFilter);
     if (categoryFilter !== "all") result = result.filter((t) => t.category === categoryFilter);
     return result;
-  })();
+  })(),
+);
 
-  function formatDate(iso: string) {
-    const parts = iso.split("-");
-    const year = parts[0] ?? "";
-    const month = parts[1] ?? "1";
-    const day = parts[2] ?? "";
-    const monthName = new Date(Number(year), Number(month) - 1).toLocaleString("en-US", { month: "short" });
-    return `${day} ${monthName} ${year.slice(2)}`;
-  }
+function showTooltip(event: MouseEvent) {
+  clearTimeout(tooltipTimeout);
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  tooltip = { x: rect.left + rect.width / 2, y: rect.top };
+}
 
-  function showTooltip(event: MouseEvent) {
-    clearTimeout(tooltipTimeout);
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    tooltip = { x: rect.left + rect.width / 2, y: rect.top };
-  }
-
-  function hideTooltip() {
-    tooltipTimeout = setTimeout(() => {
-      tooltip = null;
-    }, 50);
-  }
+function hideTooltip() {
+  tooltipTimeout = setTimeout(() => {
+    tooltip = null;
+  }, 50);
+}
 </script>
 
 <div class="rounded-xl border border-border bg-card shadow-sm">
   <div class="flex flex-wrap gap-3 border-b border-border p-4">
-    <NativeSelect bind:value={methodFilter}>
-      <option value="all">All Methods</option>
-      {#each methods as method}
-        <option value={method}>{method}</option>
-      {/each}
-    </NativeSelect>
-    <NativeSelect bind:value={categoryFilter}>
-      <option value="all">All Categories</option>
-      {#each categories as category}
-        <option value={category}>{category}</option>
-      {/each}
-    </NativeSelect>
+    <Select.Root type="single" value={methodFilter} onValueChange={(v) => (methodFilter = v)}>
+      <Select.Trigger>{methodFilter === "all" ? "All Methods" : methodFilter}</Select.Trigger>
+      <Select.Content>
+        <Select.Item value="all">All Methods</Select.Item>
+        {#each methods as method}
+          <Select.Item value={method}>{method}</Select.Item>
+        {/each}
+      </Select.Content>
+    </Select.Root>
+    <Select.Root type="single" value={categoryFilter} onValueChange={(v) => (categoryFilter = v)}>
+      <Select.Trigger>{categoryFilter === "all" ? "All Categories" : categoryFilter}</Select.Trigger>
+      <Select.Content>
+        <Select.Item value="all">All Categories</Select.Item>
+        {#each categories as category}
+          <Select.Item value={category}>{category}</Select.Item>
+        {/each}
+      </Select.Content>
+    </Select.Root>
     <span class="ml-auto self-center text-sm text-muted-foreground">{filtered.length} transactions</span>
   </div>
 
@@ -85,7 +91,7 @@
               ? "bg-muted/40"
               : ""}
         >
-          <TableCell class="whitespace-nowrap px-3 py-2.5 text-sm">{formatDate(tx.logicalDate)}</TableCell>
+          <TableCell class="whitespace-nowrap px-3 py-2.5 text-sm">{Date.fromIso(tx.logicalDate).toShort()}</TableCell>
           <TableCell
             class={`max-w-xs truncate px-3 py-2.5 text-sm ${maskedSet.has(tx.personId ?? "") ? "text-muted-foreground" : ""}`}
           >

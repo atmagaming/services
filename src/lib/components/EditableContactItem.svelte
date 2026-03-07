@@ -1,31 +1,41 @@
 <script lang="ts">
-  import { tick } from "svelte";
-  import { Pencil, X } from "@lucide/svelte";
+import { Pencil, X } from "@lucide/svelte";
+import { tick } from "svelte";
 
-  export let icon: string; // img src
-  export let value: string;
-  export let href: string | null = null;
-  export let placeholder: string;
-  export let onSave: (value: string) => void = () => {};
-  export let onRemove: (() => void) | null = null;
-  export let readonly = false;
+const {
+  icon,
+  value,
+  href = null,
+  placeholder,
+  onSave = () => {},
+  onRemove = null,
+  readonly = false,
+}: {
+  icon: string;
+  value: string;
+  href?: string | null;
+  placeholder: string;
+  onSave?: (value: string) => void;
+  onRemove?: (() => void) | null;
+  readonly?: boolean;
+} = $props();
 
-  let editing = false;
-  let editValue = "";
-  let inputEl: HTMLInputElement;
+let editing = $state(false);
+let editValue = $state("");
+let inputEl = $state<HTMLInputElement | null>(null);
 
-  async function startEdit() {
-    editValue = value;
-    editing = true;
-    await tick();
-    inputEl?.focus();
-    inputEl?.select();
-  }
+async function startEdit() {
+  editValue = value;
+  editing = true;
+  await tick();
+  inputEl?.focus();
+  inputEl?.select();
+}
 
-  function commitEdit() {
-    editing = false;
-    if (editValue !== value) onSave(editValue);
-  }
+function commitEdit() {
+  editing = false;
+  if (editValue !== value) onSave(editValue);
+}
 </script>
 
 <div class="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40">
@@ -36,7 +46,7 @@
       bind:value={editValue}
       class="flex-1 bg-transparent text-sm outline-none"
       onblur={commitEdit}
-      onkeydown={(e) => { if (e.key === "Enter" || e.key === "Escape") inputEl.blur(); }}
+      onkeydown={(e) => { if (e.key === "Enter" || e.key === "Escape") inputEl?.blur(); }}
     />
   {:else if value}
     {#if href}

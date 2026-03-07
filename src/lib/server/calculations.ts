@@ -1,12 +1,5 @@
-import type {
-  InvestmentPoint,
-  MonthlyExpense,
-  ProjectionMonth,
-  RevenueShare,
-  SensitiveData,
-  Transaction,
-} from "$lib/types";
-import { addMonths, getLastConfirmedMonth, getMonthRange, parseMonth } from "$lib/date";
+import { addMonths, getLastConfirmedMonth, getMonthRange } from "$lib/date";
+import type { InvestmentPoint, MonthlyExpense, Person, ProjectionMonth, RevenueShare, Transaction } from "$lib/types";
 
 export function countMondaysInMonth(year: number, month: number): number {
   let count = 0;
@@ -47,7 +40,7 @@ export function aggregateExpensesByMonth(transactions: Transaction[]): MonthlyEx
   return [...byMonth.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
 }
 
-export function projectExpenses(sensitiveData: SensitiveData[], endMonth: string): ProjectionMonth[] {
+export function projectExpenses(people: Person[], endMonth: string): ProjectionMonth[] {
   const firstUnconfirmed = addMonths(getLastConfirmedMonth(), 1);
   if (firstUnconfirmed > endMonth) return [];
 
@@ -55,22 +48,19 @@ export function projectExpenses(sensitiveData: SensitiveData[], endMonth: string
   const projections: ProjectionMonth[] = [];
 
   for (const monthStr of months) {
-    const [year, month] = parseMonth(monthStr);
-    const mondays = countMondaysInMonth(year, month);
+    const [year, month] = monthStr.split("-").map(Number);
+    const mondays = countMondaysInMonth(year ?? 0, (month ?? 1) - 1);
 
     let paid = 0;
     let accrued = 0;
 
-    for (const sd of sensitiveData) {
-      if (sd.status !== "Active") continue;
-      if (sd.startDate && sd.startDate > `${monthStr}-31`) continue;
-      if (sd.endDate && sd.endDate < `${monthStr}-01`) continue;
+    for (const person of people) {
+      if (person.status !== "Active") continue;
+      if (person.startDate && person.startDate > `${monthStr}-31`) continue;
+      if (person.endDate && person.endDate < `${monthStr}-01`) continue;
 
-      const weeklyPaid = sd.hoursPerWeek * sd.hourlyPaid;
-      const weeklyAccrued = sd.hoursPerWeek * sd.hourlyInvested;
-
-      paid += weeklyPaid * mondays;
-      accrued += weeklyAccrued * mondays;
+      paid += person.hoursPerWeek * person.hourlyRate.paid * mondays;
+      accrued += person.hoursPerWeek * person.hourlyRate.accrued * mondays;
     }
 
     projections.push({
@@ -86,7 +76,7 @@ export function projectExpenses(sensitiveData: SensitiveData[], endMonth: string
 
 export function calculateRevenueShares(
   transactions: Transaction[],
-  sensitiveData: SensitiveData[],
+  people: Person[],
   personNames: Map<string, string>,
   endMonth: string,
 ): RevenueShare[] {
@@ -127,28 +117,25 @@ export function calculateRevenueShares(
   for (const month of months) {
     const accrued = accruedByMonth.get(month);
     if (accrued) {
-      for (const [personId, amount] of accrued) {
+      for (const [personId, amount] of accrued)
         cumulativeInvestments.set(personId, (cumulativeInvestments.get(personId) ?? 0) + amount);
-      }
     }
 
     const invested = investedByMonth.get(month);
     if (invested) {
-      for (const [personId, amount] of invested) {
+      for (const [personId, amount] of invested)
         cumulativeInvestments.set(personId, (cumulativeInvestments.get(personId) ?? 0) + amount);
-      }
     }
 
     if (month > lastConfirmed) {
-      const [year, m] = parseMonth(month);
-      const mondays = countMondaysInMonth(year, m);
+      const [year, m] = month.split("-").map(Number);
+      const mondays = countMondaysInMonth(year ?? 0, (m ?? 1) - 1);
 
-      for (const sd of sensitiveData) {
-        if (sd.status !== "Active") continue;
-        if (!sd.hourlyInvested) continue;
-        const weeklyAccrued = sd.hoursPerWeek * sd.hourlyInvested;
-        const monthlyAccrued = weeklyAccrued * mondays;
-        cumulativeInvestments.set(sd.personId, (cumulativeInvestments.get(sd.personId) ?? 0) + monthlyAccrued);
+      for (const person of people) {
+        if (person.status !== "Active") continue;
+        if (!person.hourlyRate.accrued) continue;
+        const monthlyAccrued = person.hoursPerWeek * person.hourlyRate.accrued * mondays;
+        cumulativeInvestments.set(person.id, (cumulativeInvestments.get(person.id) ?? 0) + monthlyAccrued);
       }
     }
 
@@ -172,7 +159,7 @@ export function calculateRevenueShares(
 
 export function calculateInvestmentTimeline(
   transactions: Transaction[],
-  sensitiveData: SensitiveData[],
+  people: Person[],
   personNames: Map<string, string>,
   endMonth: string,
 ): InvestmentPoint[] {
@@ -228,13 +215,13 @@ export function calculateInvestmentTimeline(
         }
       }
     } else {
-      const [year, m] = parseMonth(month);
-      const mondays = countMondaysInMonth(year, m);
-      for (const sd of sensitiveData) {
-        if (sd.status !== "Active") continue;
-        if (!sd.hourlyInvested) continue;
-        const monthlyAccrued = sd.hoursPerWeek * sd.hourlyInvested * mondays;
-        const name = personNames.get(sd.personId) ?? sd.personId.slice(0, 8);
+      const [year, m] = month.split("-").map(Number);
+      const mondays = countMondaysInMonth(year ?? 0, (m ?? 1) - 1);
+      for (const person of people) {
+        if (person.status !== "Active") continue;
+        if (!person.hourlyRate.accrued) continue;
+        const monthlyAccrued = person.hoursPerWeek * person.hourlyRate.accrued * mondays;
+        const name = personNames.get(person.id) ?? person.id.slice(0, 8);
         values[name] = (values[name] ?? 0) + Math.round(monthlyAccrued);
       }
     }

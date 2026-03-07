@@ -1,24 +1,27 @@
 <script lang="ts">
-  import type { ChartSeries, InvestmentPoint } from "$lib/types";
-  import { CHART_COLORS } from "$lib/charts";
-  import StackedAreaChart from "$lib/components/charts/StackedAreaChart.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+import { Button } from "$lib/components/ui/button/index.js";
+import type { ChartSeries, InvestmentPoint } from "$lib/types";
+import { CHART_COLORS } from "./chart-colors";
+import StackedAreaChart from "./StackedAreaChart.svelte";
 
-  export let data: InvestmentPoint[] = [];
+const { data = [] }: { data?: InvestmentPoint[] } = $props();
 
-  let cumulative = true;
+let cumulative = $state(true);
 
-  $: allNames = (() => {
+const allNames = $derived(
+  (() => {
     const s = new Set<string>();
     for (const p of data) for (const n of Object.keys(p.values)) s.add(n);
     const latest = data[data.length - 1]?.values ?? {};
     return [...s].sort((a, b) => (latest[b] ?? 0) - (latest[a] ?? 0));
-  })();
+  })(),
+);
 
-  $: lastHistMonth = [...data].reverse().find((t) => !t.isProjected)?.month ?? "";
-  $: months = data.map((d) => d.month);
+const lastHistMonth = $derived([...data].reverse().find((t) => !t.isProjected)?.month ?? "");
+const months = $derived(data.map((d) => d.month));
 
-  $: series = allNames.map((name, i) => {
+const series = $derived(
+  allNames.map((name, i) => {
     const dataArr: (number | null)[] = [];
     const projData: (number | null)[] = [];
 
@@ -44,7 +47,7 @@
         } else {
           dataArr.push(raw ?? null);
         }
-        projData.push(point.month === lastHistMonth ? dataArr[dataArr.length - 1] ?? null : null);
+        projData.push(point.month === lastHistMonth ? (dataArr[dataArr.length - 1] ?? null) : null);
       } else {
         dataArr.push(null);
         if (cumulative) {
@@ -62,13 +65,14 @@
       data: dataArr,
       projData,
     } satisfies ChartSeries;
-  });
+  }),
+);
 </script>
 
 <StackedAreaChart title="Investments Over Time (USD)" {months} {series} lastHistMonth={lastHistMonth}>
-  <svelte:fragment slot="actions">
+  {#snippet actions()}
     <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>
       Cumulative
     </Button>
-  </svelte:fragment>
+  {/snippet}
 </StackedAreaChart>
