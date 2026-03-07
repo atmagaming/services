@@ -1,0 +1,16 @@
+- people full name (first name, last name) - not shown
+- documents need to be stored and shown
+- people images not shown
+- form to add candidate (same stuff as "edit person" view/form)
+- people status changing needs to work
+
+- status changes are not displayed as list
+
+- people as cards
+- notion as icon
+- send NDA / SDA (document) for signing
+- schedule needs to look better
+- ui for managing sickdays/vacations
+
+For the statuses - we should display a list of status changes with date and new status.
+Instead of edit status button - there should be a plus icon that will add new status change with the current date. Dates can be editable and statues can be also editable on click.

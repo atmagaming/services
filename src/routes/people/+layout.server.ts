@@ -1,6 +1,6 @@
-import type { PageServerLoad } from "./$types";
+import type { LayoutServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals, fetch }) => {
+export const load: LayoutServerLoad = async ({ locals, fetch }) => {
   const canViewPersonalData = locals.user?.canViewPersonalData ?? false;
   const canEditPeople = locals.user?.canEditPeople ?? false;
 

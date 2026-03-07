@@ -27,27 +27,33 @@
   let activeTab: "active" | "inactive" = "active";
   $: displayedPeople = activeTab === "active" ? activePeople : inactivePeople;
 
-  let drawerPerson: Person | null | undefined =
-    data.personId !== undefined ? data.people.find((p) => p.id === data.personId) : undefined;
+  // Track by ID so drawerPerson auto-updates when data.people refreshes
+  let selectedPersonId: string | null | undefined =
+    data.personId !== undefined ? data.personId : undefined;
+
+  $: drawerPerson =
+    selectedPersonId === undefined ? undefined :
+    selectedPersonId === null ? null :
+    data.people.find((p) => p.id === selectedPersonId);
+
+  $: drawerOpen = drawerPerson !== undefined;
 
   function openAddDrawer() {
-    drawerPerson = null;
+    selectedPersonId = null;
     pushState("/people/new", {});
   }
 
   function openEditDrawer(person: Person) {
     const isSwitch = drawerPerson !== undefined;
-    drawerPerson = person;
+    selectedPersonId = person.id;
     if (isSwitch) replaceState(`/people/${person.id}`, {});
     else pushState(`/people/${person.id}`, {});
   }
 
   function closeDrawer() {
-    drawerPerson = undefined;
+    selectedPersonId = undefined;
     replaceState("/people", {});
   }
-
-  $: drawerOpen = drawerPerson !== undefined;
 </script>
 
 <!-- Page header -->

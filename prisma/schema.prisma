@@ -78,6 +78,7 @@ model PersonDocument {
   personId String
   name     String
   url      String @default("")
+  category String @default("other")
 
   person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 }

@@ -1,6 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { prisma } from "$lib/server/prisma";
 import { getCachedPeople, invalidateCache, isPersonActive } from "$lib/server/data";
+import { createPersonNotionPage } from "$lib/server/notion";
 
 export const GET: RequestHandler = async ({ locals }) => {
   const canViewPersonalData = locals.user?.canViewPersonalData ?? false;
@@ -42,7 +43,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     hourlyRatePaid?: number;
     hourlyRateAccrued?: number;
     email?: string;
-    notionPersonPageId?: string;
     telegramAccount?: string;
     discord?: string;
     linkedin?: string;
@@ -69,7 +69,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       hourlyRatePaid: body.hourlyRatePaid ?? 0,
       hourlyRateAccrued: body.hourlyRateAccrued ?? 0,
       email: body.email ?? "",
-      notionPersonPageId: body.notionPersonPageId ?? "",
+      notionPersonPageId: await createPersonNotionPage(body.name, body.image).catch(() => ""),
       telegramAccount: body.telegramAccount ?? "",
       discord: body.discord ?? "",
       linkedin: body.linkedin ?? "",

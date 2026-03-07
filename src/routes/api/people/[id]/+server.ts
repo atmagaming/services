@@ -1,6 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { prisma } from "$lib/server/prisma";
 import { invalidateCache } from "$lib/server/data";
+import { updatePersonNotion } from "$lib/server/notion";
 
 export const PATCH: RequestHandler = async ({ locals, request, params }) => {
   if (!locals.user?.canEditPeople) {
@@ -13,7 +14,7 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
     "name", "firstName", "lastName", "nickname", "image", "identification",
     "passportNumber", "passportIssueDate", "passportIssuingAuthority",
     "weeklySchedule", "hourlyRatePaid", "hourlyRateAccrued", "email",
-    "notionPersonPageId", "telegramAccount", "discord", "linkedin", "description",
+    "telegramAccount", "discord", "linkedin", "description",
   ];
 
   const data: Record<string, unknown> = {};
@@ -33,6 +34,12 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
   });
 
   invalidateCache("people");
+
+  if (person.notionPersonPageId)
+    updatePersonNotion(person.notionPersonPageId, {
+      name: person.name,
+      roleNotionIds: person.roles.map((r) => r.notionId),
+    }).catch((e) => console.error("Failed to sync Notion: " + e.message));
 
   return new Response(JSON.stringify({ person }), { headers: { "content-type": "application/json" } });
 };

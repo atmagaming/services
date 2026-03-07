@@ -14,6 +14,7 @@
     "format": "npx @biomejs/biome check --write ."
   },
   "dependencies": {
+    "@elumixor/digisigner": "^1.0.10",
     "@interactive-inc/notion-client": "^1.6.0",
     "@lucide/svelte": "^0.561.0",
     "@notionhq/client": "^5.9.0",
@@ -23,6 +24,7 @@
     "bits-ui": "^2.16.2",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
+    "pdfjs-dist": "^5.5.207",
     "resend": "^6.9.2",
     "tailwind-merge": "^3.5.0",
     "tailwind-variants": "^3.2.2",

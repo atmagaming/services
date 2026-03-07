@@ -82,7 +82,7 @@ async function fetchPeople(): Promise<Person[]> {
       linkedin: r.linkedin ?? "",
       description: r.description ?? "",
       statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
-      documents: r.documents.map((d) => ({ id: d.id, name: d.name, url: d.url })),
+      documents: r.documents.map((d) => ({ id: d.id, name: d.name, url: d.url, category: d.category as import("$lib/types").DocumentCategory })),
       roles,
     };
   });

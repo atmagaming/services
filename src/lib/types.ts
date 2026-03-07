@@ -20,10 +20,13 @@ export interface PersonStatusChange {
   status: string;
 }
 
+export type DocumentCategory = "nda" | "contract" | "other";
+
 export interface PersonDocument {
   id: string;
   name: string;
   url: string;
+  category: DocumentCategory;
 }
 
 export interface PersonRole {

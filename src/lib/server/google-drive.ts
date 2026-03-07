@@ -3,6 +3,7 @@ import {
   GOOGLE_DRIVE_CLIENT_SECRET,
   GOOGLE_DRIVE_REFRESH_TOKEN,
   GOOGLE_DRIVE_DOCUMENTS_FOLDER,
+  GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID,
 } from "$env/static/private";
 
 async function getAccessToken(): Promise<string> {
@@ -41,6 +42,41 @@ export async function uploadToDrive(filename: string, mimeType: string, buffer: 
 
   const data = (await res.json()) as { id: string };
   return data.id;
+}
+
+export async function copyDocToAgreements(fileId: string, name: string): Promise<string> {
+  const accessToken = await getAccessToken();
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/copy`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+    body: JSON.stringify({ name, parents: [GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID] }),
+  });
+  if (!res.ok) throw new Error("Failed to copy Google Doc: " + (await res.text()));
+  const data = (await res.json()) as { id: string };
+  return data.id;
+}
+
+export async function replaceTextInDoc(documentId: string, replacements: Record<string, string>): Promise<void> {
+  const accessToken = await getAccessToken();
+  const requests = Object.entries(replacements).map(([find, replace]) => ({
+    replaceAllText: { containsText: { text: find, matchCase: true }, replaceText: replace },
+  }));
+  const res = await fetch(`https://docs.googleapis.com/v1/documents/${documentId}:batchUpdate`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+    body: JSON.stringify({ requests }),
+  });
+  if (!res.ok) throw new Error("Failed to update Google Doc: " + (await res.text()));
+}
+
+export async function exportDocAsPdf(documentId: string): Promise<Buffer> {
+  const accessToken = await getAccessToken();
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${documentId}/export?mimeType=application/pdf`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!res.ok) throw new Error("Failed to export Google Doc as PDF: " + (await res.text()));
+  return Buffer.from(await res.arrayBuffer());
 }
 
 export async function getDriveFileStream(fileId: string): Promise<{ stream: ReadableStream; mimeType: string }> {

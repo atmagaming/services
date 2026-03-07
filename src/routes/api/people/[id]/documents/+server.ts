@@ -10,6 +10,7 @@ export const POST: RequestHandler = async ({ locals, request, params }) => {
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
   const name = formData.get("name") as string | null;
+  const category = (formData.get("category") as string | null) ?? "other";
 
   if (!file) return new Response(JSON.stringify({ message: "file is required" }), { status: 400 });
 
@@ -17,7 +18,7 @@ export const POST: RequestHandler = async ({ locals, request, params }) => {
   const driveFileId = await uploadToDrive(file.name, file.type || "application/octet-stream", buffer);
 
   const document = await prisma.personDocument.create({
-    data: { personId: params.id, name: name ?? file.name, url: driveFileId },
+    data: { personId: params.id, name: name ?? file.name, url: driveFileId, category },
   });
 
   invalidateCache("people");

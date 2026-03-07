@@ -64,6 +64,59 @@ export async function fetchPersonRoles(): Promise<Map<string, string[]>> {
   );
 }
 
+export async function createPersonNotionPage(name: string, image?: string): Promise<string> {
+  const databaseId = env.NOTION_PEOPLE_DB_ID;
+  if (!databaseId) throw new Error("NOTION_PEOPLE_DB_ID is not set");
+
+  const notion = getClient();
+  const page = await notion.pages.create({
+    parent: { database_id: databaseId },
+    icon: image ? { type: "external", external: { url: image } } : undefined,
+    properties: {
+      title: { title: [{ type: "text", text: { content: name } }] },
+    },
+  });
+
+  return page.id;
+}
+
+export async function updatePersonNotion(
+  notionPageId: string,
+  data: { name?: string; roleNotionIds?: string[] },
+): Promise<void> {
+  const notion = getClient();
+  type UpdateParams = Parameters<typeof notion.pages.update>[0];
+  const update: UpdateParams = { page_id: notionPageId };
+  const properties: Record<string, unknown> = {};
+
+  if (data.name !== undefined)
+    properties.title = { title: [{ type: "text", text: { content: data.name } }] };
+  if (data.roleNotionIds !== undefined)
+    properties["Role"] = { relation: data.roleNotionIds.map((id) => ({ id })) };
+  if (Object.keys(properties).length > 0)
+    update.properties = properties as UpdateParams["properties"];
+
+  await notion.pages.update(update);
+}
+
+export async function uploadImageToNotion(filename: string, mimeType: string, buffer: Buffer): Promise<string> {
+  const notion = getClient();
+  const upload = await notion.fileUploads.create({ filename, content_type: mimeType });
+  await notion.fileUploads.send({
+    file_upload_id: upload.id,
+    file: { filename, data: new Blob([new Uint8Array(buffer)], { type: mimeType }) },
+  });
+  return upload.id;
+}
+
+export async function setPersonNotionIcon(notionPageId: string, fileUploadId: string | null): Promise<void> {
+  const notion = getClient();
+  await notion.pages.update({
+    page_id: notionPageId,
+    icon: fileUploadId ? { type: "file_upload", file_upload: { id: fileUploadId } } : null,
+  });
+}
+
 export async function syncPersonNotionPage(person: Person, status: string): Promise<void> {
   if (!person.notionPersonPageId) return;
 
@@ -72,7 +125,6 @@ export async function syncPersonNotionPage(person: Person, status: string): Prom
   if (status === "working") {
     await notion.pages.update({
       page_id: person.notionPersonPageId,
-      icon: person.image ? { type: "external", external: { url: person.image } } : null,
       properties: {
         title: { title: [{ type: "text", text: { content: person.name } }] },
       },

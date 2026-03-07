@@ -1,3 +1,8 @@
+## Icons
+
+- Use [Lucide](https://lucide.dev/) icons for UI elements. Install `lucide-svelte` package and import icons as Svelte components (e.g., `import { Home } from "lucide-svelte";`).
+- For custom icons, download them using the Brandfetch. Use the client id from .env. For example, fetch: https://cdn.brandfetch.io/notion.so/w/128?c=CLIENT_ID - fetches notion icon with 128px size. Store these icons in the project and import as needed.
+
 ## Code style
 
 - ALWAYS use `??` operator instead of `||` when providing default values, unless you specifically want to treat falsy values (like `0` or `""`) as needing a default.
