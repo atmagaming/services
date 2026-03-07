@@ -32,6 +32,26 @@ class Example {
 - Run `bun run lint` to check typescript and biome errors and warnings
 - Run `bun run format` to format everything after your changes
 
+## Manual Testing
+
+For manual testing, use `bun run test` to:
+
+1. Check if dev server is already running on port 3000
+2. If not running, launch it
+3. If running, display recent logs and watch the log file in real-time
+4. If you need to restart the server, run `bun run free-port` to kill any process occupying port 3000 (optional: pass a different port number)
+
+Example workflow:
+```bash
+bun run test              # Check server and watch logs
+bun run free-port         # Kill process on port 3000
+bun run free-port 8000    # Kill process on port 8000
+```
+
+Logs are stored in the `logs/` folder:
+- `logs/requests.log` - All HTTP requests with timestamps and response times
+- `logs/errors.log` - Server errors
+
 ## @elumixor packages
 
 ### `@elumixor/di`
