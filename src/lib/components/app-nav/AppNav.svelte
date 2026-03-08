@@ -1,8 +1,8 @@
 <script lang="ts">
 import { goto, invalidateAll } from "$app/navigation";
 import { page } from "$app/state";
-import { Avatar, AvatarFallback, AvatarImage } from "$lib/components/ui/avatar/index.js";
-import { Button } from "$lib/components/ui/button/index.js";
+import { Avatar, AvatarFallback, AvatarImage } from "$components/avatar";
+import { Button } from "$components/button";
 import type { SessionUser } from "$lib/types";
 
 const { user = null }: { user: SessionUser | null } = $props();

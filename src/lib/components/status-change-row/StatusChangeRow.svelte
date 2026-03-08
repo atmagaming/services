@@ -1,6 +1,6 @@
 <script lang="ts">
 import DatePicker from "$components/date-picker";
-import * as Select from "$lib/components/ui/select/index.js";
+import * as Select from "$components/select";
 
 const {
   statusChange,

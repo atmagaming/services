@@ -1,5 +1,5 @@
 <script lang="ts">
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
 import type { Person } from "$lib/types";
 
 const {

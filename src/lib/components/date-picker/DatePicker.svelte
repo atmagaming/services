@@ -1,7 +1,7 @@
 <script lang="ts">
 import { type DateValue, parseDate } from "@internationalized/date";
-import * as Calendar from "$lib/components/ui/calendar/index.js";
-import * as Popover from "$lib/components/ui/popover/index.js";
+import * as Calendar from "$components/calendar";
+import * as Popover from "$components/popover";
 import "$lib/date-extensions";
 
 const {

@@ -4,16 +4,16 @@ import { onMount, tick } from "svelte";
 import { fly } from "svelte/transition";
 import { invalidateAll } from "$app/navigation";
 import AvatarUpload from "$components/avatar-upload";
+import { Button } from "$components/button";
 import CopyButton from "$components/copy-button";
 import DatePicker from "$components/date-picker";
 import EditableContactItem from "$components/editable-contact-item";
 import InlineEdit from "$components/inline-edit";
 import PersonDocuments from "$components/person-documents";
 import PersonRoles from "$components/person-roles";
+import * as Select from "$components/select";
 import StatusChangeRow from "$components/status-change-row";
 import WeeklySchedule from "$components/weekly-schedule";
-import { Button } from "$lib/components/ui/button/index.js";
-import * as Select from "$lib/components/ui/select/index.js";
 import type { Person } from "$lib/types";
 import "$lib/date-extensions";
 

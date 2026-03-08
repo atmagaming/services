@@ -1,7 +1,7 @@
 <script lang="ts">
-import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
 import { Calendar as CalendarPrimitive } from "bits-ui";
-import { type ButtonVariant, buttonVariants } from "$lib/components/ui/button/index.js";
+import { type ButtonVariant, buttonVariants } from "$components/button";
 import { cn } from "$lib/utils.js";
 
 let {
@@ -10,16 +10,16 @@ let {
   children,
   variant = "ghost",
   ...restProps
-}: CalendarPrimitive.NextButtonProps & {
+}: CalendarPrimitive.PrevButtonProps & {
   variant?: ButtonVariant;
 } = $props();
 </script>
 
 {#snippet Fallback()}
-	<ChevronRightIcon class="size-4" />
+	<ChevronLeftIcon class="size-4" />
 {/snippet}
 
-<CalendarPrimitive.NextButton
+<CalendarPrimitive.PrevButton
 	bind:ref
 	class={cn(
 		buttonVariants({ variant }),

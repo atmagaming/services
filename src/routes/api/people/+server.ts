@@ -63,7 +63,10 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       hourlyRatePaid: body.hourlyRatePaid ?? 0,
       hourlyRateAccrued: body.hourlyRateAccrued ?? 0,
       email: body.email ?? "",
-      notionPersonPageId: await createPersonNotionPage(body.name, body.image).catch(() => ""),
+      notionPersonPageId: await createPersonNotionPage(body.name, body.image).catch((e) => {
+        console.error(`Failed to create Notion page for ${body.name}: ${e.message}`);
+        return "";
+      }),
       telegramAccount: body.telegram ?? "",
       discord: body.discord ?? "",
       linkedin: body.linkedin ?? "",

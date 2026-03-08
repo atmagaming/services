@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+import { Card, CardContent, CardHeader, CardTitle } from "$components/card";
 
 const { label, value, color, bg }: { label: string; value: number; color: string; bg: string } = $props();
 </script>

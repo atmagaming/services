@@ -1,10 +1,10 @@
 <script lang="ts">
 import { invalidateAll } from "$app/navigation";
 import CopyButton from "$components/copy-button";
+import * as Dialog from "$components/dialog";
 import ExternalLink from "$components/external-link";
+import * as Tooltip from "$components/tooltip";
 import { PUBLIC_CONTRACT_TEMPLATE_URL, PUBLIC_NDA_TEMPLATE_URL } from "$env/static/public";
-import * as Dialog from "$lib/components/ui/dialog/index.js";
-import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 import type { Person } from "$lib/types";
 
 let {

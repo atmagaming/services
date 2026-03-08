@@ -1,6 +1,6 @@
 <script lang="ts">
+import { Button } from "$components/button";
 import StackedAreaChart from "$components/stacked-area-chart";
-import { Button } from "$lib/components/ui/button/index.js";
 import { getLastConfirmedMonth, getMonthRange } from "$lib/date";
 import type { ChartSeries, MonthlyExpense, ProjectionMonth } from "$lib/types";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
 
 interface TableRowData {
   personId: string;

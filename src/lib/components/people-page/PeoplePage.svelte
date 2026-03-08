@@ -1,9 +1,9 @@
 <script lang="ts">
 import { invalidateAll, pushState, replaceState } from "$app/navigation";
+import { Button } from "$components/button";
 import PeopleGrid from "$components/people-grid";
 import PeopleTable from "$components/people-table";
 import PersonDrawer from "$components/person-drawer";
-import { Button } from "$lib/components/ui/button/index.js";
 import type { Person } from "$lib/types";
 
 const {

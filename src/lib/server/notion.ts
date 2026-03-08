@@ -58,9 +58,20 @@ export async function fetchPersonRoles(): Promise<Map<string, string[]>> {
   return new Map(pages.map((page) => [page.id, page.properties.Role?.relation?.map((r) => r.id) ?? []]));
 }
 
+let peopleDatabaseId: string | null = null;
+
+async function getPeopleDatabaseId(): Promise<string> {
+  if (peopleDatabaseId) return peopleDatabaseId;
+  const dataSourceId = env.NOTION_PEOPLE_DB_ID;
+  if (!dataSourceId) throw new Error("NOTION_PEOPLE_DB_ID is not set");
+  const ds = await notion.dataSources.retrieve({ data_source_id: dataSourceId });
+  const id = (ds.parent as { database_id?: string }).database_id ?? dataSourceId;
+  peopleDatabaseId = id;
+  return id;
+}
+
 export async function createPersonNotionPage(name: string, image?: string): Promise<string> {
-  const databaseId = env.NOTION_PEOPLE_DB_ID;
-  if (!databaseId) throw new Error("NOTION_PEOPLE_DB_ID is not set");
+  const databaseId = await getPeopleDatabaseId();
 
   const page = await notion.pages.create({
     parent: { database_id: databaseId },

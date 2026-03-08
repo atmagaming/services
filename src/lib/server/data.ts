@@ -1,4 +1,4 @@
-import { fetchAllRoles, fetchPersonRoles } from "$lib/server/notion";
+import { fetchAllRoles } from "$lib/server/notion";
 import { prisma } from "$lib/server/prisma";
 import type { DocumentCategory, IdType, Person, Transaction, TransactionMethod } from "$lib/types";
 import { Rates } from "$lib/types";
@@ -6,7 +6,6 @@ import { Rates } from "$lib/types";
 const CACHE_TTL = 300_000; // 5 minutes in ms
 
 let notionRolesPromise: Promise<Map<string, string>> | null = null;
-let notionPersonRolesPromise: Promise<Map<string, string[]>> | null = null;
 
 export function getNotionRoles(): Promise<Map<string, string>> {
   notionRolesPromise ??= fetchAllRoles()
@@ -16,14 +15,6 @@ export function getNotionRoles(): Promise<Map<string, string>> {
       return new Map<string, string>();
     });
   return notionRolesPromise;
-}
-
-function getNotionPersonRoles(): Promise<Map<string, string[]>> {
-  notionPersonRolesPromise ??= fetchPersonRoles().catch((e) => {
-    console.error(`Failed to load Notion person roles: ${(e as Error).message}`);
-    return new Map<string, string[]>();
-  });
-  return notionPersonRolesPromise;
 }
 
 interface CacheEntry<T> {
@@ -58,20 +49,13 @@ function countMondaysInMonth(year: number, month: number): number {
 const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
 
 async function fetchPeople(): Promise<Person[]> {
-  const [records, roleNames, personRoles] = await Promise.all([
-    prisma.person.findMany({ include: { statusChanges: true, documents: true } }),
-    getNotionRoles(),
-    getNotionPersonRoles(),
-  ]);
+  const records = await prisma.person.findMany({ include: { statusChanges: true, documents: true, roles: true } });
 
   const now = new Date();
   const mondays = countMondaysInMonth(now.getFullYear(), now.getMonth());
 
   return records.map((r) => {
-    const roleIds = personRoles.get(r.notionPersonPageId) ?? [];
-    const roles = roleIds
-      .map((notionId) => ({ notionId, name: roleNames.get(notionId) ?? "" }))
-      .filter((role) => role.name);
+    const roles = r.roles.map(({ notionId, name }) => ({ notionId, name }));
 
     const schedule = r.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
     const hoursPerWeek = schedule.reduce((a, b) => a + b, 0);

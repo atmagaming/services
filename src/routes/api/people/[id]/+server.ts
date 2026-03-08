@@ -1,5 +1,5 @@
 import { invalidateCache } from "$lib/server/data";
-import { updatePersonNotion } from "$lib/server/notion";
+import { createPersonNotionPage, updatePersonNotion } from "$lib/server/notion";
 import { prisma } from "$lib/server/prisma";
 import type { RequestHandler } from "./$types";
 
@@ -10,23 +10,25 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
 
   const body = (await request.json()) as Record<string, unknown>;
 
-  const directFields = [
+  const stringFields = [
     "name",
     "firstName",
     "lastName",
     "image",
     "weeklySchedule",
-    "hourlyRatePaid",
-    "hourlyRateAccrued",
     "email",
     "discord",
     "linkedin",
     "description",
   ];
+  const floatFields = ["hourlyRatePaid", "hourlyRateAccrued"];
 
   const data: Record<string, unknown> = {};
-  for (const key of directFields) {
+  for (const key of stringFields) {
     if (key in body) data[key] = body[key];
+  }
+  for (const key of floatFields) {
+    if (key in body) data[key] = parseFloat(String(body[key]));
   }
 
   if ("telegram" in body) data.telegramAccount = body.telegram;
@@ -53,6 +55,19 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
   });
 
   invalidateCache("people");
+
+  // If person has no Notion page yet, create one now
+  if (!person.notionPersonPageId) {
+    const notionId = await createPersonNotionPage(person.name, person.image ?? undefined).catch((e) => {
+      console.error(`Failed to create Notion page for ${person.name}: ${e.message}`);
+      return null;
+    });
+    if (notionId) {
+      await prisma.person.update({ where: { id: params.id }, data: { notionPersonPageId: notionId } });
+      person.notionPersonPageId = notionId;
+      invalidateCache("people");
+    }
+  }
 
   if (person.notionPersonPageId)
     updatePersonNotion(person.notionPersonPageId, {

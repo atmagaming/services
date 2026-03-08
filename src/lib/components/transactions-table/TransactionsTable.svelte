@@ -1,9 +1,9 @@
 <script lang="ts">
-import * as Select from "$lib/components/ui/select/index.js";
+import * as Select from "$components/select";
 import type { Transaction } from "$lib/types";
 import "$lib/date-extensions";
-import { Badge } from "$lib/components/ui/badge/index.js";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
+import { Badge } from "$components/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
 
 const {
   transactions = [],

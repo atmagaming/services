@@ -1,9 +1,9 @@
 <script lang="ts">
 import { goto, invalidateAll } from "$app/navigation";
-import { Button } from "$lib/components/ui/button/index.js";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
-import { Input } from "$lib/components/ui/input/index.js";
-import { Separator } from "$lib/components/ui/separator/index.js";
+import { Button } from "$components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$components/card";
+import { Input } from "$components/input";
+import { Separator } from "$components/separator";
 
 type Mode = "login" | "register" | "forgot-password";
 

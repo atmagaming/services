@@ -1,8 +1,8 @@
 <script lang="ts">
 import { page } from "$app/state";
-import { Button } from "$lib/components/ui/button/index.js";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
-import { Input } from "$lib/components/ui/input/index.js";
+import { Button } from "$components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$components/card";
+import { Input } from "$components/input";
 
 const token = $derived(page.url.searchParams.get("token") ?? "");
 let password = $state("");

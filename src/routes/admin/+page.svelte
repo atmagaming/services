@@ -1,8 +1,8 @@
 <script lang="ts">
 import { invalidateAll } from "$app/navigation";
-import { Button } from "$lib/components/ui/button/index.js";
-import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
+import { Button } from "$components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "$components/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
 
 interface UserRecord {
   id: string;
