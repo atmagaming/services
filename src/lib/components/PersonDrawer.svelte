@@ -1,10 +1,10 @@
 <script lang="ts">
 import { Mail } from "@lucide/svelte";
-import CopyButton from "$lib/components/CopyButton.svelte";
 import { onMount, tick } from "svelte";
 import { fly } from "svelte/transition";
 import { invalidateAll } from "$app/navigation";
 import AvatarUpload from "$lib/components/AvatarUpload.svelte";
+import CopyButton from "$lib/components/CopyButton.svelte";
 import DatePicker from "$lib/components/DatePicker.svelte";
 import EditableContactItem from "$lib/components/EditableContactItem.svelte";
 import InlineEdit from "$lib/components/InlineEdit.svelte";
@@ -12,7 +12,6 @@ import PersonDocuments from "$lib/components/PersonDocuments.svelte";
 import PersonRoles from "$lib/components/PersonRoles.svelte";
 import StatusChangeRow from "$lib/components/StatusChangeRow.svelte";
 import { Button } from "$lib/components/ui/button/index.js";
-import { Input } from "$lib/components/ui/input/index.js";
 import * as Select from "$lib/components/ui/select/index.js";
 import WeeklySchedule from "$lib/components/WeeklySchedule.svelte";
 import type { Person } from "$lib/types";
@@ -41,10 +40,12 @@ const {
   person = null,
   canEditPeople = false,
   onClose = () => {},
+  focusName = false,
 }: {
   person?: Person | null;
   canEditPeople?: boolean;
   onClose?: () => void;
+  focusName?: boolean;
 } = $props();
 
 const isAddMode = $derived(person === null);
@@ -115,7 +116,7 @@ $effect(() => {
       clearTimeout(autoSaveTimer);
       autoSaveTimer = null;
     }
-    if (!isAddMode && canEditPeople) {
+    if (canEditPeople) {
       tick().then(() => {
         savedSnapshot = JSON.stringify({ form, roles });
         isInitialized = true;
@@ -125,7 +126,7 @@ $effect(() => {
 });
 
 $effect(() => {
-  if (isInitialized && !isAddMode && canEditPeople && person) {
+  if (isInitialized && canEditPeople && person) {
     const current = JSON.stringify({ form, roles });
     if (current !== savedSnapshot) scheduleAutoSave();
   }
@@ -161,38 +162,6 @@ async function doAutoSave() {
   }
 }
 
-// ── Manual save (add mode only) ───────────────────────────────────────────
-
-let saving = $state(false);
-let saveError = $state("");
-
-async function save() {
-  if (!form.name.trim()) {
-    saveError = "Name is required";
-    return;
-  }
-  saving = true;
-  saveError = "";
-  try {
-    const res = await fetch("/api/people", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...form, roles }),
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { message?: string };
-      saveError = body.message ?? "Failed to save";
-      return;
-    }
-    await invalidateAll();
-    onClose();
-  } catch (e) {
-    saveError = "Failed to save: " + (e as Error).message;
-  } finally {
-    saving = false;
-  }
-}
-
 // ── Avatar upload ─────────────────────────────────────────────────────────
 
 let avatarUploading = $state(false);
@@ -217,7 +186,6 @@ async function uploadAvatar(file: File) {
     avatarUploading = false;
   }
 }
-
 
 const telegramHref = $derived(form.telegram ? `https://t.me/${form.telegram.replace(/^@/, "")}` : null);
 
@@ -323,24 +291,20 @@ let viewingDocUrl = $state<string | null>(null);
     />
 
     <div class="min-w-0 flex-1">
-      {#if isAddMode}
-        <h2 class="text-lg font-semibold">Add Person</h2>
-      {:else}
-        <div class="flex items-center gap-2">
-          <InlineEdit bind:value={form.name} placeholder="Display name" className="text-lg font-semibold" />
-          {#if person?.notionPersonPageId}
-            <a
-              href={`https://www.notion.so/${person.notionPersonPageId.replace(/-/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Open in Notion"
-              class="shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            >
-              <img src={NOTION_ICON} alt="Notion" class="size-4" />
-            </a>
-          {/if}
-        </div>
-      {/if}
+      <div class="flex items-center gap-2">
+        <InlineEdit bind:value={form.name} placeholder="Display name" className="text-lg font-semibold" autofocus={focusName} />
+        {#if person?.notionPersonPageId}
+          <a
+            href={`https://www.notion.so/${person.notionPersonPageId.replace(/-/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open in Notion"
+            class="shrink-0 opacity-40 hover:opacity-100 transition-opacity"
+          >
+            <img src={NOTION_ICON} alt="Notion" class="size-4" />
+          </a>
+        {/if}
+      </div>
     </div>
 
     <button class="shrink-0 rounded-md p-1 hover:bg-muted" onclick={onClose} aria-label="Close">
@@ -520,58 +484,30 @@ let viewingDocUrl = $state<string | null>(null);
         </div>
       </section>
 
-    {:else if isAddMode}
-      <!-- Add mode: basic name fields -->
-      <section>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="block">
-            <span class="mb-1 block text-xs font-medium text-muted-foreground">First Name</span>
-            <Input bind:value={form.firstName} placeholder="Jane" />
-          </label>
-          <label class="block">
-            <span class="mb-1 block text-xs font-medium text-muted-foreground">Last Name</span>
-            <Input bind:value={form.lastName} placeholder="Smith" />
-          </label>
-        </div>
-        <label class="mt-3 block">
-          <span class="mb-1 block text-xs font-medium text-muted-foreground">Display Name *</span>
-          <Input bind:value={form.name} placeholder="Jane Smith" />
-        </label>
-      </section>
     {/if}
 
   </div>
 
   <!-- Footer -->
   <div class="border-t border-border px-6 py-4">
-    {#if saveError}
-      <p class="mb-2 text-sm text-destructive">{saveError}</p>
-    {/if}
     <div class="flex items-center justify-between">
       <div>
-        {#if canEditPeople && !isAddMode}
+        {#if canEditPeople}
           <Button variant="ghost" class="text-destructive hover:text-destructive" onclick={deletePerson}>
             Delete Person
           </Button>
         {/if}
       </div>
       <div class="flex items-center gap-3">
-        {#if !isAddMode && canEditPeople}
+        {#if canEditPeople}
           <span class="text-xs text-muted-foreground">
             {#if autoSaveStatus === "saving"}Saving…
             {:else if autoSaveStatus === "saved"}Saved ✓
             {:else if autoSaveStatus === "error"}<span class="text-destructive">Save failed</span>
             {/if}
           </span>
-          <Button variant="ghost" onclick={onClose}>Close</Button>
-        {:else}
-          <Button variant="ghost" onclick={onClose}>Cancel</Button>
-          {#if canEditPeople}
-            <Button onclick={save} disabled={saving}>
-              {saving ? "Saving…" : "Add Person"}
-            </Button>
-          {/if}
         {/if}
+        <Button variant="ghost" onclick={onClose}>Close</Button>
       </div>
     </div>
   </div>
