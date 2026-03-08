@@ -5,7 +5,7 @@ import RevenueChart from "$lib/components/charts/RevenueChart.svelte";
 import SummaryCard from "$lib/components/SummaryCard.svelte";
 import TeamBreakdownTable from "$lib/components/TeamBreakdownTable.svelte";
 
-const { data }: { data: { data: any } } = $props();
+const { data } = $props();
 const dashboard = $derived(data.data);
 </script>
 

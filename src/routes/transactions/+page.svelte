@@ -1,7 +1,7 @@
 <script lang="ts">
 import TransactionsTable from "$lib/components/TransactionsTable.svelte";
 
-const { data }: { data: { data: any } } = $props();
+const { data } = $props();
 const payload = $derived(data.data);
 </script>
 

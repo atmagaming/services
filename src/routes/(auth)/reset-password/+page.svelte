@@ -38,7 +38,7 @@ async function handleSubmit() {
 }
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-purple-50/30 px-4">
+<div class="flex min-h-screen items-center justify-center bg-linear-to-br from-indigo-50 via-background to-purple-50/30 px-4">
   {#if !token}
     <p class="text-muted-foreground">Invalid reset link.</p>
   {:else if success}

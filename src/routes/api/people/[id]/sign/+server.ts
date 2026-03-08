@@ -92,6 +92,6 @@ export const POST: RequestHandler = async ({ locals, request, params }) => {
 
     return new Response(JSON.stringify({ adminUrl, personUrl }), { headers: { "content-type": "application/json" } });
   } catch (e) {
-    return new Response(JSON.stringify({ message: "Signing failed: " + (e as Error).message }), { status: 500 });
+    return new Response(JSON.stringify({ message: `Signing failed: ${(e as Error).message}` }), { status: 500 });
   }
 };

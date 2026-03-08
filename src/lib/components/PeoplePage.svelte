@@ -1,5 +1,5 @@
 <script lang="ts">
-import { pushState, replaceState } from "$app/navigation";
+import { invalidateAll, pushState, replaceState } from "$app/navigation";
 import PeopleGrid from "$lib/components/PeopleGrid.svelte";
 import PeopleTable from "$lib/components/PeopleTable.svelte";
 import PersonDrawer from "$lib/components/PersonDrawer.svelte";
@@ -33,24 +33,31 @@ const displayedPeople = $derived(activeTab === "active" ? activePeople : inactiv
 
 // Initialize from URL param once; managed independently after that
 // svelte-ignore state_referenced_locally
-let selectedPersonId = $state<string | null | undefined>(data.personId !== undefined ? data.personId : undefined);
+let selectedPersonId = $state<string | undefined>(data.personId !== undefined ? data.personId : undefined);
+let focusName = $state(false);
 
 const drawerPerson = $derived(
-  selectedPersonId === undefined
-    ? undefined
-    : selectedPersonId === null
-      ? null
-      : data.people.find((p) => p.id === selectedPersonId),
+  selectedPersonId === undefined ? undefined : data.people.find((p) => p.id === selectedPersonId),
 );
 
 const drawerOpen = $derived(drawerPerson !== undefined);
 
-function openAddDrawer() {
-  selectedPersonId = null;
-  pushState("/people/new", {});
+async function openAddDrawer() {
+  const res = await fetch("/api/people", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "New Person" }),
+  });
+  if (!res.ok) return;
+  const { person } = (await res.json()) as { person: Person };
+  await invalidateAll();
+  focusName = true;
+  selectedPersonId = person.id;
+  pushState(`/people/${person.id}`, {});
 }
 
 function openEditDrawer(person: Person) {
+  focusName = false;
   const isSwitch = drawerPerson !== undefined;
   selectedPersonId = person.id;
   if (isSwitch) replaceState(`/people/${person.id}`, {});
@@ -106,6 +113,7 @@ function closeDrawer() {
         person={drawerPerson ?? null}
         canEditPeople={data.canEditPeople}
         onClose={closeDrawer}
+        {focusName}
       />
     {/if}
   </div>

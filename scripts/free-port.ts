@@ -1,5 +1,5 @@
-import { exec } from "child_process";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 
 const execAsync = promisify(exec);
 
@@ -16,7 +16,7 @@ try {
   } else {
     console.log(`✓ Port ${port} is already free`);
   }
-} catch (e) {
+} catch (_e) {
   // lsof returns exit code 1 if no process found
   console.log(`✓ Port ${port} is already free`);
 }

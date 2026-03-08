@@ -1,5 +1,5 @@
-import { appendFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { appendFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 
 const logsDir = join(process.cwd(), "logs");
 

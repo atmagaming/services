@@ -55,7 +55,7 @@ export async function fetchPersonRoles(): Promise<Map<string, string[]>> {
     cursor = res.has_more ? (res.next_cursor ?? undefined) : undefined;
   } while (cursor);
 
-  return new Map(pages.map((page) => [page.id, page.properties["Role"]?.relation?.map((r) => r.id) ?? []]));
+  return new Map(pages.map((page) => [page.id, page.properties.Role?.relation?.map((r) => r.id) ?? []]));
 }
 
 export async function createPersonNotionPage(name: string, image?: string): Promise<string> {
@@ -82,7 +82,7 @@ export async function updatePersonNotion(
   const properties: Record<string, unknown> = {};
 
   if (data.name !== undefined) properties.title = { title: [{ type: "text", text: { content: data.name } }] };
-  if (data.roleNotionIds !== undefined) properties["Role"] = { relation: data.roleNotionIds.map((id) => ({ id })) };
+  if (data.roleNotionIds !== undefined) properties.Role = { relation: data.roleNotionIds.map((id) => ({ id })) };
   if (Object.keys(properties).length > 0) update.properties = properties as UpdateParams["properties"];
 
   await notion.pages.update(update);

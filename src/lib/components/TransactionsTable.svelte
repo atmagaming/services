@@ -116,8 +116,8 @@ function hideTooltip() {
               maskedSet.has(tx.personId ?? "")
                 ? "cursor-help text-muted-foreground"
                 : tx.usdEquivalent > 0
-                  ? "text-[var(--green)]"
-                  : "text-[var(--red)]"
+                  ? "text-(--green)"
+                  : "text-(--red)"
             }`}
             onmouseenter={maskedSet.has(tx.personId ?? "") ? showTooltip : undefined}
             onmouseleave={maskedSet.has(tx.personId ?? "") ? hideTooltip : undefined}

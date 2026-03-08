@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { Check, Copy } from "lucide-svelte";
+import { Check, Copy } from "lucide-svelte";
 
-  interface Props {
-    value: string;
-    size?: number;
-    class?: string;
-  }
+interface Props {
+  value: string;
+  size?: number;
+  class?: string;
+}
 
-  let { value, size = 4, class: className = "" }: Props = $props();
+let { value, size = 4, class: className = "" }: Props = $props();
 
-  let copied = $state(false);
+let copied = $state(false);
 
-  async function copy() {
-    await navigator.clipboard.writeText(value);
-    copied = true;
-    setTimeout(() => (copied = false), 1500);
-  }
+async function copy() {
+  await navigator.clipboard.writeText(value);
+  copied = true;
+  setTimeout(() => (copied = false), 1500);
+}
 </script>
 
 <button

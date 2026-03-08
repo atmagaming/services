@@ -1,20 +1,30 @@
 <script lang="ts">
-import { tick } from "svelte";
+import { onMount, tick, untrack } from "svelte";
 
 let {
   value = $bindable(""),
   placeholder = "",
   className = "",
   showDisplayPlaceholder = true,
+  autofocus = false,
 }: {
   value?: string;
   placeholder?: string;
   className?: string;
   showDisplayPlaceholder?: boolean;
+  autofocus?: boolean;
 } = $props();
 
-let editing = $state(false);
+let editing = $state(untrack(() => autofocus));
 let inputEl = $state<HTMLInputElement | null>(null);
+
+onMount(async () => {
+  if (autofocus) {
+    await tick();
+    inputEl?.focus();
+    inputEl?.select();
+  }
+});
 
 async function startEdit() {
   editing = true;

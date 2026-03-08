@@ -14,7 +14,7 @@ const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 let inputs = $state<HTMLInputElement[]>([]);
 
 const parts = $derived(value.split(",").map((v) => v.trim()));
-const total = $derived(parts.reduce((sum, v) => sum + (parseInt(v) || 0), 0));
+const total = $derived(parts.reduce((sum, v) => sum + (parseInt(v, 10) || 0), 0));
 
 function setValue(index: number, digit: string) {
   const updated = [...parts];

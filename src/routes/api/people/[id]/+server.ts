@@ -58,7 +58,7 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
     updatePersonNotion(person.notionPersonPageId, {
       name: person.name,
       roleNotionIds: person.roles.map((r) => r.notionId),
-    }).catch((e) => console.error("Failed to sync Notion: " + e.message));
+    }).catch((e) => console.error(`Failed to sync Notion: ${e.message}`));
 
   return new Response(JSON.stringify({ person }), { headers: { "content-type": "application/json" } });
 };

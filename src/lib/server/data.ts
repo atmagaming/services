@@ -12,7 +12,7 @@ export function getNotionRoles(): Promise<Map<string, string>> {
   notionRolesPromise ??= fetchAllRoles()
     .then((roles) => new Map(roles.map((r) => [r.notionId, r.name])))
     .catch((e) => {
-      console.error("Failed to load Notion roles: " + (e as Error).message);
+      console.error(`Failed to load Notion roles: ${(e as Error).message}`);
       return new Map<string, string>();
     });
   return notionRolesPromise;
@@ -20,7 +20,7 @@ export function getNotionRoles(): Promise<Map<string, string>> {
 
 function getNotionPersonRoles(): Promise<Map<string, string[]>> {
   notionPersonRolesPromise ??= fetchPersonRoles().catch((e) => {
-    console.error("Failed to load Notion person roles: " + (e as Error).message);
+    console.error(`Failed to load Notion person roles: ${(e as Error).message}`);
     return new Map<string, string[]>();
   });
   return notionPersonRolesPromise;

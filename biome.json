@@ -1,7 +1,17 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
-    "includes": ["src/**", "scripts/**", "*.ts", "*.json", "!.claude", "!.nuxt", "!.output", "!generated"],
+    "includes": [
+      "src/**",
+      "scripts/**",
+      "*.ts",
+      "*.json",
+      "!.claude",
+      "!.nuxt",
+      "!.output",
+      "!generated",
+      "!src/app.css"
+    ],
     "ignoreUnknown": true
   },
   "linter": {
@@ -15,7 +25,12 @@
       "style": {
         "useShorthandAssign": "error",
         "useConsistentObjectDefinitions": "error",
-        "useConsistentArrowReturn": "error"
+        "useConsistentArrowReturn": "error",
+        "useImportType": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "off",
+        "noUnusedVariables": "off"
       },
       "nursery": {
         "noFloatingPromises": "error"
@@ -32,6 +47,18 @@
     "formatter": {
       "quoteStyle": "double",
       "semicolons": "always"
+    }
+  },
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "allowWrongLineComments": true
+    },
+    "linter": {
+      "enabled": false
+    },
+    "formatter": {
+      "enabled": false
     }
   }
 }

@@ -80,10 +80,10 @@ const teamAgg = $derived(aggregateRows(rows));
               {row.isCurrentUser ? `${row.name} (You)` : row.name}
             </TableCell>
             <TableCell class="px-4 py-3 text-right text-sm font-mono">{row.hoursPerWeek}</TableCell>
-            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--red)">
               ${Math.round(row.paidRate)}/hr
             </TableCell>
-            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--orange)">
               ${Math.round(row.investedRate)}/hr
             </TableCell>
             <TableCell class="px-4 py-3 text-right text-sm font-mono">${row.monthlyPaid.toLocaleString()}</TableCell>
@@ -107,10 +107,10 @@ const teamAgg = $derived(aggregateRows(rows));
           <TableRow class="bg-primary/5">
             <TableCell class="px-4 py-3 text-sm font-medium">{row.name} (You)</TableCell>
             <TableCell class="px-4 py-3 text-right text-sm font-mono">{row.hoursPerWeek}</TableCell>
-            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--red)">
               ${Math.round(row.paidRate)}/hr
             </TableCell>
-            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--orange)">
               ${Math.round(row.investedRate)}/hr
             </TableCell>
             <TableCell class="px-4 py-3 text-right text-sm font-mono">${row.monthlyPaid.toLocaleString()}</TableCell>
@@ -137,10 +137,10 @@ const teamAgg = $derived(aggregateRows(rows));
             <TableCell class="px-4 py-3 text-right text-sm font-mono text-muted-foreground">
               {othersAgg.hoursPerWeek}
             </TableCell>
-            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--red)">
               ${Math.round(othersAgg.paidRate)}/hr
             </TableCell>
-            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--orange)">
               ${Math.round(othersAgg.investedRate)}/hr
             </TableCell>
             <TableCell class="px-4 py-3 text-right text-sm font-mono text-muted-foreground">
@@ -167,10 +167,10 @@ const teamAgg = $derived(aggregateRows(rows));
         <TableRow>
           <TableCell class="px-4 py-3 text-sm font-medium">Team ({teamCount})</TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--red)">
             ${Math.round(teamAgg.paidRate)}/hr
           </TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--orange)">
             ${Math.round(teamAgg.investedRate)}/hr
           </TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
@@ -194,10 +194,10 @@ const teamAgg = $derived(aggregateRows(rows));
         <TableRow class="border-t-2 border-t-border bg-muted/50 font-semibold">
           <TableCell class="px-4 py-3 text-sm font-semibold">Total ({teamCount})</TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--red)">
             ${Math.round(teamAgg.paidRate)}/hr
           </TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-(--orange)">
             ${Math.round(teamAgg.investedRate)}/hr
           </TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>

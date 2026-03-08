@@ -18,10 +18,11 @@ export const POST: RequestHandler = async ({ locals, request, params }) => {
   const person = await prisma.person.update({ where: { id: params.id }, data: { image } });
 
   // Upload image to Notion and set as page icon (best-effort)
-  if (person.notionPersonPageId)
+  const { notionPersonPageId } = person;
+  if (notionPersonPageId)
     uploadImageToNotion(file.name, file.type || "image/jpeg", buffer)
-      .then((fileUploadId) => setPersonNotionIcon(person.notionPersonPageId!, fileUploadId))
-      .catch((e) => console.error("Failed to update Notion icon: " + e.message));
+      .then((fileUploadId) => setPersonNotionIcon(notionPersonPageId, fileUploadId))
+      .catch((e) => console.error(`Failed to update Notion icon: ${e.message}`));
 
   invalidateCache("people");
   return new Response(JSON.stringify({ image }), { headers: { "content-type": "application/json" } });

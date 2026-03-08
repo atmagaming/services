@@ -96,7 +96,7 @@ onMount(async () => {
       availableRoles = data.roles;
     }
   } catch (e) {
-    console.error("Failed to fetch roles: " + (e as Error).message);
+    console.error(`Failed to fetch roles: ${(e as Error).message}`);
   }
 });
 
@@ -157,7 +157,7 @@ async function doAutoSave() {
       if (autoSaveStatus === "saved") autoSaveStatus = "idle";
     }, 2000);
   } catch (e) {
-    console.error("Auto-save failed: " + (e as Error).message);
+    console.error(`Auto-save failed: ${(e as Error).message}`);
     autoSaveStatus = "error";
   }
 }
@@ -176,12 +176,12 @@ async function uploadAvatar(file: File) {
     const res = await fetch(`/api/people/${person.id}/image`, { method: "POST", body: fd });
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { message?: string };
-      console.error("Avatar upload failed: " + (body.message ?? "unknown"));
+      console.error(`Avatar upload failed: ${body.message ?? "unknown"}`);
       return;
     }
     await invalidateAll();
   } catch (e) {
-    console.error("Avatar upload failed: " + (e as Error).message);
+    console.error(`Avatar upload failed: ${(e as Error).message}`);
   } finally {
     avatarUploading = false;
   }
@@ -247,7 +247,7 @@ async function deleteStatus(statusId: string) {
 
 // ── Payment calculations ─────────────────────────────────────────────────
 
-const weeklyHours = $derived(form.weeklySchedule.split(",").reduce((sum, v) => sum + (parseInt(v) || 0), 0));
+const weeklyHours = $derived(form.weeklySchedule.split(",").reduce((sum, v) => sum + (parseInt(v, 10) || 0), 0));
 const hourlyTotal = $derived(+form.hourlyRatePaid + +form.hourlyRateAccrued);
 
 function fmtHourly(n: number) {

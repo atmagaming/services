@@ -56,7 +56,7 @@ async function uploadFile(file: File, category: DocCategory) {
     if (input) input.value = "";
     await invalidateAll();
   } catch (e) {
-    uploadErrors = { ...uploadErrors, [category]: "Upload failed: " + (e as Error).message };
+    uploadErrors = { ...uploadErrors, [category]: `Upload failed: ${(e as Error).message}` };
   } finally {
     uploading = null;
   }
@@ -94,7 +94,7 @@ async function signDocument(category: "nda" | "contract") {
     }
     if (data.adminUrl && data.personUrl) signUrls = { adminUrl: data.adminUrl, personUrl: data.personUrl };
   } catch (e) {
-    signError = "Signing failed: " + (e as Error).message;
+    signError = `Signing failed: ${(e as Error).message}`;
   } finally {
     signing = null;
   }
