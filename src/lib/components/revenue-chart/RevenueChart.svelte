@@ -1,7 +1,7 @@
 <script lang="ts">
+import StackedAreaChart from "$components/stacked-area-chart";
+import { CHART_COLORS } from "$lib/chart-colors";
 import type { ChartSeries, RevenueShare } from "$lib/types";
-import { CHART_COLORS } from "./chart-colors";
-import StackedAreaChart from "./StackedAreaChart.svelte";
 
 const { data = [] }: { data?: RevenueShare[] } = $props();
 

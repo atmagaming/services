@@ -1,5 +1,5 @@
 <script lang="ts">
-import DatePicker from "$lib/components/DatePicker.svelte";
+import DatePicker from "$components/date-picker";
 import * as Select from "$lib/components/ui/select/index.js";
 
 const {

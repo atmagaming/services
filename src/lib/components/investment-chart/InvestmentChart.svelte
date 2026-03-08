@@ -1,8 +1,8 @@
 <script lang="ts">
+import StackedAreaChart from "$components/stacked-area-chart";
+import { CHART_COLORS } from "$lib/chart-colors";
 import { Button } from "$lib/components/ui/button/index.js";
 import type { ChartSeries, InvestmentPoint } from "$lib/types";
-import { CHART_COLORS } from "./chart-colors";
-import StackedAreaChart from "./StackedAreaChart.svelte";
 
 const { data = [] }: { data?: InvestmentPoint[] } = $props();
 

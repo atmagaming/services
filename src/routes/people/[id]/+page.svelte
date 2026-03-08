@@ -1,5 +1,5 @@
 <script lang="ts">
-import PeoplePage from "$lib/components/PeoplePage.svelte";
+import PeoplePage from "$components/people-page";
 
 const { data }: { data: import("./$types").PageData } = $props();
 </script>

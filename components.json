@@ -4,7 +4,7 @@
     "baseColor": "slate"
   },
   "aliases": {
-    "components": "$lib/components/ui",
+    "components": "$lib/components",
     "utils": "$lib/utils",
     "ui": "$lib/components/ui",
     "hooks": "$lib/hooks",

@@ -1,8 +1,8 @@
 <script lang="ts">
 import { invalidateAll } from "$app/navigation";
+import CopyButton from "$components/copy-button";
+import ExternalLink from "$components/external-link";
 import { PUBLIC_CONTRACT_TEMPLATE_URL, PUBLIC_NDA_TEMPLATE_URL } from "$env/static/public";
-import CopyButton from "$lib/components/CopyButton.svelte";
-import ExternalLink from "$lib/components/ExternalLink.svelte";
 import * as Dialog from "$lib/components/ui/dialog/index.js";
 import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 import type { Person } from "$lib/types";

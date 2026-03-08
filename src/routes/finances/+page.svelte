@@ -1,9 +1,9 @@
 <script lang="ts">
-import ExpenseChart from "$lib/components/charts/ExpenseChart.svelte";
-import InvestmentChart from "$lib/components/charts/InvestmentChart.svelte";
-import RevenueChart from "$lib/components/charts/RevenueChart.svelte";
-import SummaryCard from "$lib/components/SummaryCard.svelte";
-import TeamBreakdownTable from "$lib/components/TeamBreakdownTable.svelte";
+import ExpenseChart from "$components/expense-chart";
+import InvestmentChart from "$components/investment-chart";
+import RevenueChart from "$components/revenue-chart";
+import SummaryCard from "$components/summary-card";
+import TeamBreakdownTable from "$components/team-breakdown-table";
 
 const { data } = $props();
 const dashboard = $derived(data.data);

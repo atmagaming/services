@@ -2,7 +2,7 @@
 import "../app.css";
 import type { Snippet } from "svelte";
 import { page } from "$app/state";
-import AppNav from "$lib/components/AppNav.svelte";
+import AppNav from "$components/app-nav";
 
 const {
   data,

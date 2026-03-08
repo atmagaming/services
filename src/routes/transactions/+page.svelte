@@ -1,5 +1,5 @@
 <script lang="ts">
-import TransactionsTable from "$lib/components/TransactionsTable.svelte";
+import TransactionsTable from "$components/transactions-table";
 
 const { data } = $props();
 const payload = $derived(data.data);

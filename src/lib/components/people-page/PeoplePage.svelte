@@ -1,8 +1,8 @@
 <script lang="ts">
 import { invalidateAll, pushState, replaceState } from "$app/navigation";
-import PeopleGrid from "$lib/components/PeopleGrid.svelte";
-import PeopleTable from "$lib/components/PeopleTable.svelte";
-import PersonDrawer from "$lib/components/PersonDrawer.svelte";
+import PeopleGrid from "$components/people-grid";
+import PeopleTable from "$components/people-table";
+import PersonDrawer from "$components/person-drawer";
 import { Button } from "$lib/components/ui/button/index.js";
 import type { Person } from "$lib/types";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-import StackedAreaChart from "$lib/components/charts/StackedAreaChart.svelte";
+import StackedAreaChart from "$components/stacked-area-chart";
 import { Button } from "$lib/components/ui/button/index.js";
 import { getLastConfirmedMonth, getMonthRange } from "$lib/date";
 import type { ChartSeries, MonthlyExpense, ProjectionMonth } from "$lib/types";
