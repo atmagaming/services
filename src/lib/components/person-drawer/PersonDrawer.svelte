@@ -218,13 +218,13 @@ const canSign = $derived(missingSigningFields.length === 0);
       <PersonRoles bind:roles {availableRoles} readonly={!canEditPeople} />
     </section>
 
-    <PersonDrawerContact {form} {canEditPeople} />
+    <PersonDrawerContact bind:form {canEditPeople} />
 
-    <PersonDrawerWorkConditions {form} {canEditPeople} />
+    <PersonDrawerWorkConditions bind:form {canEditPeople} />
 
     {#if !isAddMode && person}
       <PersonDrawerStatus {person} {canEditPeople} />
-      <PersonDrawerLegal {form} {canEditPeople} {person} {canSign} {missingSigningFields} />
+      <PersonDrawerLegal bind:form {canEditPeople} {person} {canSign} {missingSigningFields} />
     {/if}
 
     <div class="flex items-center justify-between">

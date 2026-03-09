@@ -135,8 +135,6 @@ function heatStyle(value: number, max: number, hue: number): string {
                 <a href="mailto:{person.email}" class="text-sm text-muted-foreground hover:text-foreground hover:underline" onclick={(e) => e.stopPropagation()}>{person.email}</a>
                 <CopyButton value={person.email} size={3} />
               </div>
-            {:else}
-              <span class="text-sm text-muted-foreground">—</span>
             {/if}
           </Sensitive>
         </TableCell>
