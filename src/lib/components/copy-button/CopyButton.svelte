@@ -20,7 +20,7 @@ async function copy() {
 
 <button
   type="button"
-  onclick={copy}
+  onclick={(e) => { e.stopPropagation(); copy(); }}
   class="shrink-0 rounded p-0.5 hover:bg-muted {className}"
   aria-label="Copy"
 >

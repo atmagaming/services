@@ -1,21 +1,11 @@
 <script lang="ts">
 import { invalidateAll, pushState, replaceState } from "$app/navigation";
 import { Button } from "$components/button";
-import PeopleGrid from "$components/people-grid";
 import PeopleTable from "$components/people-table";
 import PersonDrawer from "$components/person-drawer";
 import type { Person } from "$lib/types";
 
-const {
-  data,
-}: {
-  data: {
-    people: Person[];
-    canViewPersonalData: boolean;
-    canEditPeople: boolean;
-    personId?: string;
-  };
-} = $props();
+const { data }: { data: import("./$types").PageData } = $props();
 
 const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
 
@@ -31,9 +21,8 @@ const inactivePeople = $derived(data.people.filter((p) => !isActive(p)));
 let activeTab = $state<"active" | "inactive">("active");
 const displayedPeople = $derived(activeTab === "active" ? activePeople : inactivePeople);
 
-// Initialize from URL param once; managed independently after that
 // svelte-ignore state_referenced_locally
-let selectedPersonId = $state<string | undefined>(data.personId !== undefined ? data.personId : undefined);
+let selectedPersonId = $state<string | undefined>(data.personId);
 let focusName = $state(false);
 
 const drawerPerson = $derived(
@@ -70,7 +59,6 @@ function closeDrawer() {
 }
 </script>
 
-<!-- Page header -->
 <div class="mb-4 flex shrink-0 items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-foreground">
@@ -87,36 +75,35 @@ function closeDrawer() {
   {/if}
 </div>
 
-{#if data.canViewPersonalData}
-  <!-- Tabs -->
-  <div class="flex shrink-0 gap-2 border-b border-border">
-    <button
-      class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "active" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
-      onclick={() => (activeTab = "active")}
-    >
-      Active ({activePeople.length})
-    </button>
-    <button
-      class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "inactive" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
-      onclick={() => (activeTab = "inactive")}
-    >
-      Inactive / Candidates ({inactivePeople.length})
-    </button>
-  </div>
+<div class="flex shrink-0 gap-2 border-b border-border">
+  <button
+    class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "active" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+    onclick={() => (activeTab = "active")}
+  >
+    Active ({activePeople.length})
+  </button>
+  <button
+    class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "inactive" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+    onclick={() => (activeTab = "inactive")}
+  >
+    {data.canViewPersonalData ? "Inactive / Candidates" : "Inactive"} ({inactivePeople.length})
+  </button>
+</div>
 
-  <div class="mt-4 flex min-h-0 flex-1 gap-4">
-    <div class="min-w-0 flex-1 overflow-auto rounded-lg border border-border bg-card">
-      <PeopleTable people={displayedPeople} onEditPerson={openEditDrawer} />
-    </div>
-    {#if drawerOpen}
-      <PersonDrawer
-        person={drawerPerson ?? null}
-        canEditPeople={data.canEditPeople}
-        onClose={closeDrawer}
-        {focusName}
-      />
-    {/if}
+<div class="mt-4 flex min-h-0 flex-1 gap-4">
+  <div class="min-w-0 flex-1 rounded-lg border border-border bg-card h-fit">
+    <PeopleTable
+      people={displayedPeople}
+      canViewPersonalData={data.canViewPersonalData}
+      onEditPerson={data.canViewPersonalData ? openEditDrawer : undefined}
+    />
   </div>
-{:else}
-  <PeopleGrid people={activePeople} />
-{/if}
+  {#if drawerOpen}
+    <PersonDrawer
+      person={drawerPerson ?? null}
+      canEditPeople={data.canEditPeople}
+      onClose={closeDrawer}
+      {focusName}
+    />
+  {/if}
+</div>
