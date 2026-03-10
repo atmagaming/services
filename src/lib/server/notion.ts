@@ -1,6 +1,6 @@
 import { Client } from "@notionhq/client";
 import { env } from "$env/dynamic/private";
-import type { Person } from "$lib/types";
+import type { Person, PersonStatus } from "$lib/types";
 
 export interface NotionRole {
   notionId: string;
@@ -115,24 +115,14 @@ export async function setPersonNotionIcon(notionPageId: string, fileUploadId: st
   });
 }
 
-export async function syncPersonNotionPage(person: Person, status: string): Promise<void> {
-  if (!person.notionPersonPageId) return;
+export async function syncPersonNotionPage(person: Person, status: PersonStatus): Promise<void> {
+  if (!person.notionPersonPageId || status !== "working") return;
 
-  if (status === "working") {
-    await notion.pages.update({
-      page_id: person.notionPersonPageId,
-      properties: {
-        title: { title: [{ type: "text", text: { content: person.name } }] },
-      },
-    });
-  } else if (status === "inactive") {
-    const primaryRole = person.roles[0]?.name ?? "Team Member";
-    await notion.pages.update({
-      page_id: person.notionPersonPageId,
-      icon: null,
-      properties: {
-        title: { title: [{ type: "text", text: { content: `${primaryRole} (TBH)` } }] },
-      },
-    });
-  }
+  await notion.pages.update({
+    page_id: person.notionPersonPageId,
+    icon: { type: "external", external: { url: person.image } },
+    properties: {
+      title: { title: [{ type: "text", text: { content: person.name } }] },
+    },
+  });
 }

@@ -3,7 +3,7 @@ import DollarSign from "@lucide/svelte/icons/dollar-sign";
 import CopyButton from "$components/copy-button";
 import Sensitive from "$components/sensitive";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
-import type { Person } from "$lib/types";
+import type { Person, PersonStatus } from "$lib/types";
 
 const {
   people = [],
@@ -15,14 +15,14 @@ const {
   onEditPerson?: (person: Person) => void;
 } = $props();
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<PersonStatus, string> = {
   working: "Working",
   vacation: "Vacation",
   sick_leave: "Sick Leave",
   inactive: "Inactive",
 };
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_COLORS: Record<PersonStatus, string> = {
   working: "bg-green-100 text-green-800",
   vacation: "bg-blue-100 text-blue-800",
   sick_leave: "bg-yellow-100 text-yellow-800",
@@ -31,7 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-function getLatestStatus(person: Person): string {
+function getLatestStatus(person: Person): PersonStatus {
   const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
   return sorted.at(-1)?.status ?? "inactive";
 }

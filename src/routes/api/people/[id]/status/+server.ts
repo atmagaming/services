@@ -1,6 +1,7 @@
-import { getCachedPeople, invalidateCache } from "$lib/server/data";
-import { syncPersonNotionPage } from "$lib/server/notion";
+import { invalidateCache } from "$lib/server/data";
+import { enqueueNotionSync } from "$lib/server/notion-queue";
 import { prisma } from "$lib/server/prisma";
+import { type PersonStatus, VALID_STATUSES } from "$lib/types";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ locals, request, params }) => {
@@ -11,8 +12,7 @@ export const POST: RequestHandler = async ({ locals, request, params }) => {
   const body = (await request.json()) as { status?: string; date?: string };
   const { status, date } = body;
 
-  const validStatuses = ["working", "inactive", "vacation", "sick_leave"];
-  if (!status || !validStatuses.includes(status)) {
+  if (!status || !(VALID_STATUSES as string[]).includes(status)) {
     return new Response(JSON.stringify({ message: "Invalid status" }), { status: 400 });
   }
 
@@ -24,15 +24,7 @@ export const POST: RequestHandler = async ({ locals, request, params }) => {
 
   invalidateCache("people");
 
-  if (status === "working" || status === "inactive") {
-    try {
-      const people = await getCachedPeople();
-      const person = people.find((p) => p.id === params.id);
-      if (person) await syncPersonNotionPage(person, status);
-    } catch (e) {
-      console.error("Notion sync failed:", e);
-    }
-  }
+  if (status === "working") enqueueNotionSync(params.id, status as PersonStatus);
 
   return new Response(JSON.stringify({ success: true }), { headers: { "content-type": "application/json" } });
 };

@@ -43,9 +43,10 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
 
   if ("roles" in body && Array.isArray(body.roles)) {
     await prisma.personRole.deleteMany({ where: { personId: params.id } });
-    data.roles = {
-      create: (body.roles as { notionId: string; name: string }[]).map(({ notionId, name }) => ({ notionId, name })),
-    };
+    const uniqueRoles = [
+      ...new Map((body.roles as { notionId: string; name: string }[]).map((r) => [r.notionId, r])).values(),
+    ];
+    data.roles = { create: uniqueRoles.map(({ notionId, name }) => ({ notionId, name })) };
   }
 
   const person = await prisma.person.update({

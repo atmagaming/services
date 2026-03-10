@@ -1,25 +1,26 @@
 <script lang="ts">
 import DatePicker from "$components/date-picker";
 import * as Select from "$components/select";
+import type { PersonStatus } from "$lib/types";
 
 const {
   statusChange,
   onUpdate,
   onDelete,
 }: {
-  statusChange: { id: string; date: string; status: string };
+  statusChange: { id: string; date: string; status: PersonStatus };
   onUpdate: (field: "status" | "date", value: string) => void;
   onDelete: () => void;
 } = $props();
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<PersonStatus, string> = {
   working: "Working",
   vacation: "Vacation",
   sick_leave: "Sick Leave",
   inactive: "Inactive",
 };
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_COLORS: Record<PersonStatus, string> = {
   working: "bg-green-100 text-green-800",
   vacation: "bg-blue-100 text-blue-800",
   sick_leave: "bg-yellow-100 text-yellow-800",

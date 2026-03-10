@@ -32,7 +32,7 @@ function fmtHourly(n: number) {
             type="text" inputmode="decimal"
             readonly={!canEditPeople}
             oninput={(e) => { const el = e.target as HTMLInputElement; el.value = el.value.replace(/[^0-9.]/g, "").replace(/(\\..*?)\\..+/g, "$1"); form.hourlyRatePaid = el.value as unknown as number; }}
-            onblur={(e) => { const v = parseFloat((e.target as HTMLInputElement).value); if (!isNaN(v)) form.hourlyRatePaid = v.toFixed(2) as unknown as number; }}
+            onblur={(e) => { const el = e.target as HTMLInputElement; const v = parseFloat(el.value); if (!isNaN(v)) { form.hourlyRatePaid = v; el.value = v.toFixed(2); } }}
             class="w-full bg-transparent px-2 text-center text-sm font-medium focus:outline-none"
           />
         </div>
@@ -45,7 +45,7 @@ function fmtHourly(n: number) {
             type="text" inputmode="decimal"
             readonly={!canEditPeople}
             oninput={(e) => { const el = e.target as HTMLInputElement; el.value = el.value.replace(/[^0-9.]/g, "").replace(/(\\..*?)\\..+/g, "$1"); form.hourlyRateAccrued = el.value as unknown as number; }}
-            onblur={(e) => { const v = parseFloat((e.target as HTMLInputElement).value); if (!isNaN(v)) form.hourlyRateAccrued = v.toFixed(2) as unknown as number; }}
+            onblur={(e) => { const el = e.target as HTMLInputElement; const v = parseFloat(el.value); if (!isNaN(v)) { form.hourlyRateAccrued = v; el.value = v.toFixed(2); } }}
             class="w-full bg-transparent px-2 text-center text-sm font-medium focus:outline-none"
           />
         </div>

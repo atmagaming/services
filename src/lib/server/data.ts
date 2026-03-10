@@ -1,6 +1,6 @@
 import { fetchAllRoles } from "$lib/server/notion";
 import { prisma } from "$lib/server/prisma";
-import type { DocumentCategory, IdType, Person, Transaction, TransactionMethod } from "$lib/types";
+import type { DocumentCategory, IdType, Person, PersonStatus, Transaction, TransactionMethod } from "$lib/types";
 import { Rates } from "$lib/types";
 
 const CACHE_TTL = 300_000; // 5 minutes in ms
@@ -53,7 +53,8 @@ type PersonRecord = Awaited<
 >[number];
 
 export function mapPersonRecord(r: PersonRecord, mondays: number): Person {
-  const roles = r.roles.map(({ notionId, name }) => ({ notionId, name }));
+  const rolesMap = new Map(r.roles.map((role) => [role.notionId, role]));
+  const roles = [...rolesMap.values()].map(({ notionId, name }) => ({ notionId, name }));
 
   const schedule = r.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
   const hoursPerWeek = schedule.reduce((a, b) => a + b, 0);
@@ -96,7 +97,7 @@ export function mapPersonRecord(r: PersonRecord, mondays: number): Person {
     discord: r.discord ?? "",
     linkedin: r.linkedin ?? "",
     description: r.description ?? "",
-    statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
+    statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status as PersonStatus })),
     documents: r.documents.map((d) => ({
       id: d.id,
       name: d.name,

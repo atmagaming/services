@@ -1,3 +1,6 @@
+export type PersonStatus = "working" | "inactive" | "vacation" | "sick_leave";
+export const VALID_STATUSES: PersonStatus[] = ["working", "inactive", "vacation", "sick_leave"];
+
 export type TransactionMethod = "Paid" | "Accrued" | "Invested";
 
 export interface Transaction {
@@ -17,7 +20,7 @@ export interface Transaction {
 export interface PersonStatusChange {
   id: string;
   date: string;
-  status: string;
+  status: PersonStatus;
 }
 
 export type DocumentCategory = "nda" | "contract" | "other";

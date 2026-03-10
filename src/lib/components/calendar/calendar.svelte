@@ -1,7 +1,8 @@
 <script lang="ts">
-import { type DateValue, isEqualMonth } from "@internationalized/date";
+import { type DateValue, getLocalTimeZone, isEqualMonth, today } from "@internationalized/date";
 import { Calendar as CalendarPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
+import { Button } from "$components/button";
 import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
 import type { ButtonVariant } from "../button/button.svelte";
 import * as Calendar from "./index.js";
@@ -37,6 +38,13 @@ const monthFormat = $derived.by(() => {
   if (captionLayout.startsWith("dropdown")) return "short";
   return "long";
 });
+
+const todayDate = today(getLocalTimeZone());
+
+function goToToday() {
+  placeholder = todayDate;
+  value = todayDate as never;
+}
 </script>
 
 <!--
@@ -48,6 +56,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 	bind:ref
 	bind:placeholder
 	{weekdayFormat}
+	weekStartsOn={1}
 	{disableDaysOutsideMonth}
 	class={cn(
 		"bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
@@ -111,5 +120,8 @@ get along, so we shut typescript up by casting `value` to `never`.
 				</Calendar.Month>
 			{/each}
 		</Calendar.Months>
+		<div class="mt-2 flex justify-center">
+			<Button variant="outline" class="h-7 px-3 text-xs" onclick={goToToday}>Today</Button>
+		</div>
 	{/snippet}
 </CalendarPrimitive.Root>
