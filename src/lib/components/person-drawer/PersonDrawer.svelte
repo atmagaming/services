@@ -1,10 +1,10 @@
 <script lang="ts">
+import { onMount, tick, untrack } from "svelte";
+import { fly } from "svelte/transition";
 import { invalidateAll } from "$app/navigation";
 import { Button } from "$components/button";
 import PersonRoles from "$components/person-roles";
 import type { Person } from "$lib/types";
-import { onMount, tick } from "svelte";
-import { fly } from "svelte/transition";
 import PersonDrawerContact from "./PersonDrawerContact.svelte";
 import PersonDrawerHeader from "./PersonDrawerHeader.svelte";
 import PersonDrawerLegal from "./PersonDrawerLegal.svelte";
@@ -15,12 +15,20 @@ const {
   person = null,
   canEditPeople = false,
   onClose = () => {},
+  onSaved = (_person: Person) => {},
+  onFormChange = (_form: ReturnType<typeof buildForm>, _roles: RoleOption[]) => {},
   focusName = false,
+  ndaTemplateUrl,
+  contractTemplateUrl,
 }: {
   person?: Person | null;
   canEditPeople?: boolean;
   onClose?: () => void;
+  onSaved?: (person: Person) => void;
+  onFormChange?: (form: ReturnType<typeof buildForm>, roles: RoleOption[]) => void;
   focusName?: boolean;
+  ndaTemplateUrl: string;
+  contractTemplateUrl: string;
 } = $props();
 
 const isAddMode = $derived(person === null);
@@ -57,11 +65,6 @@ let form = $state(buildForm(person));
 let roles = $state<RoleOption[]>(person?.roles.map((r) => ({ notionId: r.notionId, name: r.name })) ?? []);
 let availableRoles = $state<RoleOption[]>([]);
 
-$effect(() => {
-  form = buildForm(person);
-  roles = person?.roles.map((r) => ({ notionId: r.notionId, name: r.name })) ?? [];
-});
-
 onMount(async () => {
   try {
     const res = await fetch("/api/roles");
@@ -86,6 +89,8 @@ $effect(() => {
   if (person?.id !== currentPersonId) {
     currentPersonId = person?.id;
     isInitialized = false;
+    form = buildForm(person);
+    roles = person?.roles.map((r) => ({ notionId: r.notionId, name: r.name })) ?? [];
     if (autoSaveTimer) {
       clearTimeout(autoSaveTimer);
       autoSaveTimer = null;
@@ -100,9 +105,12 @@ $effect(() => {
 });
 
 $effect(() => {
-  if (isInitialized && canEditPeople && person) {
-    const current = JSON.stringify({ form, roles });
-    if (current !== savedSnapshot) scheduleAutoSave();
+  if (!isInitialized || !canEditPeople) return;
+  if (!untrack(() => person)) return;
+  const current = JSON.stringify({ form, roles });
+  if (current !== savedSnapshot) {
+    scheduleAutoSave();
+    untrack(() => onFormChange(form, roles));
   }
 });
 
@@ -125,8 +133,10 @@ async function doAutoSave() {
       autoSaveStatus = "error";
       return;
     }
+    const { person: updatedPerson } = (await res.json()) as { person: Person };
     savedSnapshot = JSON.stringify({ form, roles });
     autoSaveStatus = "saved";
+    onSaved(updatedPerson);
     setTimeout(() => {
       if (autoSaveStatus === "saved") autoSaveStatus = "idle";
     }, 2000);
@@ -153,7 +163,8 @@ async function uploadAvatar(file: File) {
       console.error(`Avatar upload failed: ${body.message ?? "unknown"}`);
       return;
     }
-    await invalidateAll();
+    const { image } = (await res.json()) as { image: string };
+    onSaved({ ...person, image });
   } catch (e) {
     console.error(`Avatar upload failed: ${(e as Error).message}`);
   } finally {
@@ -224,7 +235,7 @@ const canSign = $derived(missingSigningFields.length === 0);
 
     {#if !isAddMode && person}
       <PersonDrawerStatus {person} {canEditPeople} />
-      <PersonDrawerLegal bind:form {canEditPeople} {person} {canSign} {missingSigningFields} />
+      <PersonDrawerLegal bind:form {canEditPeople} {person} {canSign} {missingSigningFields} {ndaTemplateUrl} {contractTemplateUrl} />
     {/if}
 
     <div class="flex items-center justify-between">

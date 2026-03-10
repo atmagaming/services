@@ -1,9 +1,10 @@
 <script lang="ts">
 import { invalidateAll, pushState, replaceState } from "$app/navigation";
 import { Button } from "$components/button";
+import * as Dialog from "$components/dialog";
 import PeopleTable from "$components/people-table";
 import PersonDrawer from "$components/person-drawer";
-import type { Person } from "$lib/types";
+import { type Person, Rates } from "$lib/types";
 
 const { data }: { data: import("./$types").PageData } = $props();
 
@@ -15,9 +16,74 @@ function isActive(person: Person): boolean {
   return latest !== undefined && ACTIVE_STATUSES.has(latest.status);
 }
 
-const activePeople = $derived(data.people.filter(isActive));
-const inactivePeople = $derived(data.people.filter((p) => !isActive(p)));
+const overrides = $state<Record<string, Person>>({});
+const people = $derived(data.people.map((p) => overrides[p.id] ?? p));
 
+function countMondaysThisMonth(): number {
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  let count = 0;
+  for (let day = 1; day <= daysInMonth; day++)
+    if (new Date(now.getFullYear(), now.getMonth(), day).getDay() === 1) count++;
+  return count;
+}
+
+function onPersonFormChange(
+  form: {
+    name: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    telegram: string;
+    discord: string;
+    linkedin: string;
+    weeklySchedule: string;
+    hourlyRatePaid: number;
+    hourlyRateAccrued: number;
+    identification: { type: string; number: string; issueDate: string; issuingAuthority: string };
+  },
+  roles: { notionId: string; name: string }[],
+) {
+  if (!selectedPersonId) return;
+  const base = data.people.find((p) => p.id === selectedPersonId);
+  if (!base) return;
+
+  const schedule = form.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
+  const hoursPerWeek = schedule.reduce((a, b) => a + b, 0);
+  const mondays = countMondaysThisMonth();
+  const hourlyRate = new Rates(form.hourlyRatePaid, form.hourlyRateAccrued);
+  const monthlyPaid = hoursPerWeek * hourlyRate.paid * mondays;
+  const monthlyAccrued = hoursPerWeek * hourlyRate.accrued * mondays;
+
+  overrides[selectedPersonId] = {
+    ...base,
+    name: form.name,
+    firstName: form.firstName,
+    lastName: form.lastName,
+    email: form.email,
+    telegram: form.telegram,
+    discord: form.discord,
+    linkedin: form.linkedin,
+    weeklySchedule: form.weeklySchedule,
+    identification: form.identification as Person["identification"],
+    schedule,
+    hoursPerWeek,
+    hourlyRate,
+    monthlyPaid,
+    monthlyAccrued,
+    monthlyTotal: monthlyPaid + monthlyAccrued,
+    roles,
+  };
+}
+
+function onPersonSaved(updated: Person) {
+  overrides[updated.id] = updated;
+}
+
+const activePeople = $derived(people.filter(isActive));
+const inactivePeople = $derived(people.filter((p) => !isActive(p)));
+
+let creatingPerson = $state(false);
 let activeTab = $state<"active" | "inactive">("active");
 const displayedPeople = $derived(activeTab === "active" ? activePeople : inactivePeople);
 
@@ -26,23 +92,28 @@ let selectedPersonId = $state<string | undefined>(data.personId);
 let focusName = $state(false);
 
 const drawerPerson = $derived(
-  selectedPersonId === undefined ? undefined : data.people.find((p) => p.id === selectedPersonId),
+  selectedPersonId === undefined ? undefined : people.find((p) => p.id === selectedPersonId),
 );
 
 const drawerOpen = $derived(drawerPerson !== undefined);
 
 async function openAddDrawer() {
-  const res = await fetch("/api/people", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name: "New Person" }),
-  });
-  if (!res.ok) return;
-  const { person } = (await res.json()) as { person: Person };
-  await invalidateAll();
-  focusName = true;
-  selectedPersonId = person.id;
-  pushState(`/people/${person.id}`, {});
+  creatingPerson = true;
+  try {
+    const res = await fetch("/api/people", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "New Person" }),
+    });
+    if (!res.ok) return;
+    const { person } = (await res.json()) as { person: Person };
+    await invalidateAll();
+    focusName = true;
+    selectedPersonId = person.id;
+    pushState(`/people/${person.id}`, {});
+  } finally {
+    creatingPerson = false;
+  }
 }
 
 function openEditDrawer(person: Person) {
@@ -58,6 +129,13 @@ function closeDrawer() {
   replaceState("/people", {});
 }
 </script>
+
+<Dialog.Dialog open={creatingPerson}>
+  <Dialog.Content showCloseButton={false} class="flex flex-col items-center gap-3 py-8 sm:max-w-xs">
+    <div class="size-6 animate-spin rounded-full border-2 border-muted border-t-foreground"></div>
+    <p class="text-sm text-muted-foreground">Creating person…</p>
+  </Dialog.Content>
+</Dialog.Dialog>
 
 <div class="mb-4 flex shrink-0 items-center justify-between">
   <div>
@@ -103,7 +181,11 @@ function closeDrawer() {
       person={drawerPerson ?? null}
       canEditPeople={data.canEditPeople}
       onClose={closeDrawer}
+      onSaved={onPersonSaved}
+      onFormChange={onPersonFormChange}
       {focusName}
+      ndaTemplateUrl={data.ndaTemplateUrl}
+      contractTemplateUrl={data.contractTemplateUrl}
     />
   {/if}
 </div>

@@ -1,3 +1,4 @@
+import { GOOGLE_DRIVE_CONTRACT_TEMPLATE_ID, GOOGLE_DRIVE_NDA_TEMPLATE_ID } from "$env/static/private";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals, fetch }) => {
@@ -9,5 +10,8 @@ export const load: LayoutServerLoad = async ({ locals, fetch }) => {
 
   const { people } = await res.json();
 
-  return { people, canViewPersonalData, canEditPeople };
+  const ndaTemplateUrl = `https://docs.google.com/document/d/${GOOGLE_DRIVE_NDA_TEMPLATE_ID}`;
+  const contractTemplateUrl = `https://docs.google.com/document/d/${GOOGLE_DRIVE_CONTRACT_TEMPLATE_ID}`;
+
+  return { people, canViewPersonalData, canEditPeople, ndaTemplateUrl, contractTemplateUrl };
 };

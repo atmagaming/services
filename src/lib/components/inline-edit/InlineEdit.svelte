@@ -51,6 +51,7 @@ function stopEdit() {
   <button
     type="button"
     onclick={startEdit}
+    onfocus={startEdit}
     class="cursor-text text-left hover:opacity-70 {className}"
   >
     {#if value}

@@ -12,6 +12,8 @@ const {
   person,
   canSign = false,
   missingSigningFields = [],
+  ndaTemplateUrl,
+  contractTemplateUrl,
 }: {
   form: {
     firstName: string;
@@ -22,6 +24,8 @@ const {
   person: Person;
   canSign?: boolean;
   missingSigningFields?: string[];
+  ndaTemplateUrl: string;
+  contractTemplateUrl: string;
 } = $props();
 
 let viewingDocUrl = $state<string | null>(null);
@@ -75,7 +79,7 @@ let viewingDocUrl = $state<string | null>(null);
   {/if}
 
   <div class="mt-5">
-    <PersonDocuments {person} canEdit={canEditPeople} {canSign} {missingSigningFields} bind:viewingDocUrl />
+    <PersonDocuments {person} canEdit={canEditPeople} {canSign} {missingSigningFields} {ndaTemplateUrl} {contractTemplateUrl} bind:viewingDocUrl />
   </div>
 </section>
 

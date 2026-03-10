@@ -4,7 +4,6 @@ import CopyButton from "$components/copy-button";
 import * as Dialog from "$components/dialog";
 import ExternalLink from "$components/external-link";
 import * as Tooltip from "$components/tooltip";
-import { PUBLIC_CONTRACT_TEMPLATE_URL, PUBLIC_NDA_TEMPLATE_URL } from "$env/static/public";
 import type { Person } from "$lib/types";
 
 let {
@@ -12,21 +11,25 @@ let {
   canEdit = false,
   canSign = false,
   missingSigningFields = [],
+  ndaTemplateUrl,
+  contractTemplateUrl,
   viewingDocUrl = $bindable<string | null>(null),
 }: {
   person: Person;
   canEdit?: boolean;
   canSign?: boolean;
   missingSigningFields?: string[];
+  ndaTemplateUrl: string;
+  contractTemplateUrl: string;
   viewingDocUrl?: string | null;
 } = $props();
 
 type DocCategory = "nda" | "contract" | "other";
-const CATEGORIES: { key: DocCategory; label: string; templateUrl?: string }[] = [
-  { key: "nda", label: "NDA", templateUrl: PUBLIC_NDA_TEMPLATE_URL },
-  { key: "contract", label: "Contract", templateUrl: PUBLIC_CONTRACT_TEMPLATE_URL },
-  { key: "other", label: "Others" },
-];
+const CATEGORIES = $derived.by(() => [
+  { key: "nda" as DocCategory, label: "NDA", templateUrl: ndaTemplateUrl },
+  { key: "contract" as DocCategory, label: "Contract", templateUrl: contractTemplateUrl },
+  { key: "other" as DocCategory, label: "Others", templateUrl: undefined as string | undefined },
+]);
 
 let uploading = $state<DocCategory | null>(null);
 let uploadErrors = $state<Partial<Record<DocCategory, string>>>({});

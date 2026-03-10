@@ -1,4 +1,4 @@
-import { invalidateCache } from "$lib/server/data";
+import { countMondaysInMonth, invalidateCache, mapPersonRecord } from "$lib/server/data";
 import { createPersonNotionPage, updatePersonNotion } from "$lib/server/notion";
 import { prisma } from "$lib/server/prisma";
 import type { RequestHandler } from "./$types";
@@ -75,7 +75,12 @@ export const PATCH: RequestHandler = async ({ locals, request, params }) => {
       roleNotionIds: person.roles.map((r) => r.notionId),
     }).catch((e) => console.error(`Failed to sync Notion: ${e.message}`));
 
-  return new Response(JSON.stringify({ person }), { headers: { "content-type": "application/json" } });
+  const now = new Date();
+  const mondays = countMondaysInMonth(now.getFullYear(), now.getMonth());
+
+  return new Response(JSON.stringify({ person: mapPersonRecord(person, mondays) }), {
+    headers: { "content-type": "application/json" },
+  });
 };
 
 export const DELETE: RequestHandler = async ({ locals, params }) => {

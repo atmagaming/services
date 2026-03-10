@@ -11,7 +11,7 @@ import type { Person } from "$lib/types";
 import { copyDocToAgreements, exportDocAsPdf, replaceTextInDoc } from "./google-drive";
 import "$lib/date-extensions";
 
-const digiSigner = new DigiSigner(DIGISIGNER_API_KEY);
+export const digiSigner = new DigiSigner(DIGISIGNER_API_KEY);
 
 async function findTextPosition(buffer: Buffer, text: string, pageIndex: number) {
   const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
@@ -78,7 +78,13 @@ export async function sendDocumentForSigning(
     "[DATE]": new Date().toLong(),
   };
 
-  if (category === "contract") replacements["[ROLE]"] = person.roles.map((r) => r.name).first ?? "";
+  if (category === "contract") {
+    replacements["[ROLE]"] = person.roles.map((r) => r.name).first ?? "";
+    replacements["[HOURS_PER_SPRINT]"] = String(person.hoursPerWeek);
+    replacements["[START_DATE]"] = person.startDate ? Date.fromIso(person.startDate).toLong() : "";
+    replacements["[PAID_RATE]"] = person.hourlyRate.paid.toFixed(2);
+    replacements["[INVESTMENT_RATE]"] = person.hourlyRate.accrued.toFixed(2);
+  }
 
   await replaceTextInDoc(copiedDocId, replacements);
 

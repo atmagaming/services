@@ -37,7 +37,7 @@ export function invalidateCache(key: string) {
   cache.delete(key);
 }
 
-function countMondaysInMonth(year: number, month: number): number {
+export function countMondaysInMonth(year: number, month: number): number {
   let count = 0;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   for (let day = 1; day <= daysInMonth; day++) {
@@ -48,66 +48,72 @@ function countMondaysInMonth(year: number, month: number): number {
 
 const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
 
+type PersonRecord = Awaited<
+  ReturnType<typeof prisma.person.findMany<{ include: { statusChanges: true; documents: true; roles: true } }>>
+>[number];
+
+export function mapPersonRecord(r: PersonRecord, mondays: number): Person {
+  const roles = r.roles.map(({ notionId, name }) => ({ notionId, name }));
+
+  const schedule = r.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
+  const hoursPerWeek = schedule.reduce((a, b) => a + b, 0);
+
+  const sorted = r.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
+  const workingChange = sorted.find((c) => c.status === "working");
+  const inactiveChange = sorted.findLast((c) => c.status === "inactive");
+  const latest = sorted.at(-1);
+  const active = latest !== undefined && ACTIVE_STATUSES.has(latest.status);
+
+  const hourlyRate = new Rates(r.hourlyRatePaid, r.hourlyRateAccrued);
+  const monthlyPaid = hoursPerWeek * hourlyRate.paid * mondays;
+  const monthlyAccrued = hoursPerWeek * hourlyRate.accrued * mondays;
+
+  return {
+    id: r.id,
+    name: r.name,
+    firstName: r.firstName ?? "",
+    lastName: r.lastName ?? "",
+    image: r.image ?? "",
+    identification: {
+      type: (r.identification as IdType) || "",
+      number: r.passportNumber ?? "",
+      issueDate: r.passportIssueDate ?? "",
+      issuingAuthority: r.passportIssuingAuthority ?? "",
+    },
+    weeklySchedule: r.weeklySchedule,
+    schedule,
+    hoursPerWeek,
+    hourlyRate,
+    monthlyPaid,
+    monthlyAccrued,
+    monthlyTotal: monthlyPaid + monthlyAccrued,
+    startDate: workingChange?.date ?? null,
+    endDate: inactiveChange?.date ?? null,
+    status: active ? "Active" : "Inactive",
+    email: r.email,
+    notionPersonPageId: r.notionPersonPageId,
+    telegram: r.telegramAccount,
+    discord: r.discord ?? "",
+    linkedin: r.linkedin ?? "",
+    description: r.description ?? "",
+    statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
+    documents: r.documents.map((d) => ({
+      id: d.id,
+      name: d.name,
+      url: d.url,
+      category: d.category as DocumentCategory,
+    })),
+    roles,
+  };
+}
+
 async function fetchPeople(): Promise<Person[]> {
   const records = await prisma.person.findMany({ include: { statusChanges: true, documents: true, roles: true } });
 
   const now = new Date();
   const mondays = countMondaysInMonth(now.getFullYear(), now.getMonth());
 
-  return records.map((r) => {
-    const roles = r.roles.map(({ notionId, name }) => ({ notionId, name }));
-
-    const schedule = r.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
-    const hoursPerWeek = schedule.reduce((a, b) => a + b, 0);
-
-    const sorted = r.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
-    const workingChange = sorted.find((c) => c.status === "working");
-    const inactiveChange = sorted.findLast((c) => c.status === "inactive");
-    const latest = sorted.at(-1);
-    const active = latest !== undefined && ACTIVE_STATUSES.has(latest.status);
-
-    const hourlyRate = new Rates(r.hourlyRatePaid, r.hourlyRateAccrued);
-    const monthlyPaid = hoursPerWeek * hourlyRate.paid * mondays;
-    const monthlyAccrued = hoursPerWeek * hourlyRate.accrued * mondays;
-
-    return {
-      id: r.id,
-      name: r.name,
-      firstName: r.firstName ?? "",
-      lastName: r.lastName ?? "",
-      image: r.image ?? "",
-      identification: {
-        type: (r.identification as IdType) || "",
-        number: r.passportNumber ?? "",
-        issueDate: r.passportIssueDate ?? "",
-        issuingAuthority: r.passportIssuingAuthority ?? "",
-      },
-      weeklySchedule: r.weeklySchedule,
-      schedule,
-      hoursPerWeek,
-      hourlyRate,
-      monthlyPaid,
-      monthlyAccrued,
-      monthlyTotal: monthlyPaid + monthlyAccrued,
-      startDate: workingChange?.date ?? null,
-      endDate: inactiveChange?.date ?? null,
-      status: active ? "Active" : "Inactive",
-      email: r.email,
-      notionPersonPageId: r.notionPersonPageId,
-      telegram: r.telegramAccount,
-      discord: r.discord ?? "",
-      linkedin: r.linkedin ?? "",
-      description: r.description ?? "",
-      statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
-      documents: r.documents.map((d) => ({
-        id: d.id,
-        name: d.name,
-        url: d.url,
-        category: d.category as DocumentCategory,
-      })),
-      roles,
-    };
-  });
+  return records.map((r) => mapPersonRecord(r, mondays));
 }
 
 async function fetchTransactions(): Promise<Transaction[]> {
