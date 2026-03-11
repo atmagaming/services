@@ -18,6 +18,7 @@ api.use(
   cors({
     origin: [
       "https://dashboard.atmagaming.com",
+      "https://atma-dashboard.vercel.app",
       "https://atmagaming.com",
       "http://localhost:5173",
       "http://localhost:3000",
