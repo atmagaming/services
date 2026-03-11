@@ -1,0 +1,108 @@
+services:
+  - type: web
+    name: atma-api
+    runtime: docker
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    plan: starter
+    domains:
+      - api.atmagaming.com
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: BOT_MODE
+        value: webhook
+      - key: BASE_URL
+        value: https://api.atmagaming.com
+      - key: SESSION_SECRET
+        sync: false
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+      - key: GOOGLE_DRIVE_DOCUMENTS_FOLDER
+        sync: false
+      - key: GOOGLE_DRIVE_NDA_TEMPLATE_ID
+        sync: false
+      - key: GOOGLE_DRIVE_CONTRACT_TEMPLATE_ID
+        sync: false
+      - key: GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID
+        sync: false
+      - key: NOTION_API_KEY
+        sync: false
+      - key: NOTION_PEOPLE_DB_ID
+        sync: false
+      - key: NOTION_ROLES_DB_ID
+        sync: false
+      - key: NOTION_MEMORIES_PAGE_ID
+        sync: false
+      - key: NOTION_SENSITIVE_DATA_DB_ID
+        sync: false
+      - key: NOTION_TASKS_DB_ID
+        sync: false
+      - key: NOTION_HYPOCRISY_DB_ID
+        sync: false
+      - key: NOTION_SKILLS_DB_ID
+        sync: false
+      - key: NOTION_SYSTEM_PROMPT_PAGE_ID
+        sync: false
+      - key: NOTION_WEBHOOK_SECRET
+        sync: false
+      - key: DIGISIGNER_API_KEY
+        sync: false
+      - key: SIGNING_ADMIN_NAME
+        sync: false
+      - key: SIGNING_ADMIN_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: SUPER_ADMIN_EMAILS
+        sync: false
+      - key: PUBLIC_AUTH_URL
+        value: https://dashboard.atmagaming.com
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_USER_ID
+        sync: false
+      - key: ALLOWED_USER_ID
+        sync: false
+      - key: SECONDARY_USER_ID
+        sync: false
+      - key: GROUP_CHAT_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MESHY_API_KEY
+        sync: false
+      - key: PERPLEXITY_API_KEY
+        sync: false
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_SESSION
+        sync: false
+      - key: TELEGRAM_PHONE_NUMBER
+        sync: false
+      - key: TELEGRAM_TEAM_GROUP_ID
+        sync: false
+      - key: TELEGRAM_TEAM_INVITE_LINK
+        sync: false
+      - key: WISE_API_TOKEN
+        sync: false
+      - key: DB_PATH
+        value: /var/data/bot.db

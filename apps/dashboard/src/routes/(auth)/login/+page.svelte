@@ -1,9 +1,10 @@
 <script lang="ts">
-import { goto, invalidateAll } from "$app/navigation";
+import { goto } from "$app/navigation";
 import { Button } from "$components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$components/card";
 import { Input } from "$components/input";
 import { Separator } from "$components/separator";
+import { login, register, forgotPassword } from "$lib/auth.svelte";
 
 type Mode = "login" | "register" | "forgot-password";
 
@@ -31,40 +32,14 @@ async function handleSubmit() {
 
   try {
     if (mode === "login") {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) throw new Error();
-      await invalidateAll();
+      await login(email, password);
       await goto("/");
     } else if (mode === "register") {
-      const registerRes = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password, name }),
-      });
-      if (!registerRes.ok) {
-        const payload = await registerRes.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Registration failed");
-      }
-
-      const loginRes = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!loginRes.ok) throw new Error("Invalid email or password");
-      await invalidateAll();
+      await register(email, password, name);
+      await login(email, password);
       await goto("/");
     } else {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error();
+      await forgotPassword(email);
       success = "If that email exists, a reset link has been sent.";
     }
   } catch (e) {

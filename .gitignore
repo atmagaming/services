@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+.svelte-kit/
+build/
+out/
+.next/
+logs/
+cache/
+*.db
+*.db-journal

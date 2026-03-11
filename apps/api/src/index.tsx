@@ -155,27 +155,28 @@ if (env.BOT_MODE === "webhook") {
   logger.info("Bot started in polling mode");
 }
 
-// Start HTTP server for webhook (only in webhook mode)
-if (env.BOT_MODE === "webhook") {
+// Start HTTP server with Hono API + bot webhooks
+{
+  const { Hono } = await import("hono");
+  const { api } = await import("./api/app");
+
+  const app = new Hono();
+
+  // Mount the dashboard/shared API
+  app.route("/", api);
+
+  // Telegram webhook
+  if (handleWebhook) app.post("/telegram", async (c) => await handleWebhook(c.req.raw));
+
+  // Notion webhook
+  app.post("/notion-webhook", async (c) => await handleNotionWebhook(bot, c.req.raw));
+
   Bun.serve({
     port: env.PORT,
-    async fetch(req) {
-      const url = new URL(req.url);
-
-      // Telegram webhook
-      if (url.pathname === "/webhook" && handleWebhook) return await handleWebhook(req);
-
-      // Notion webhook
-      if (url.pathname === "/notion-webhook") return await handleNotionWebhook(bot, req);
-
-      // Health check
-      if (url.pathname === "/") return new Response("Bot is running!", { status: 200 });
-
-      return new Response("Not Found", { status: 404 });
-    },
+    fetch: app.fetch,
   });
 
-  logger.info({ port: env.PORT }, "Server started in webhook mode");
+  logger.info({ port: env.PORT }, "Server started with Hono API");
 }
 
 // Graceful shutdown

@@ -1,3 +1,8 @@
 <script lang="ts">
-// redirected to /finances via +page.server.ts
+import { goto } from "$app/navigation";
+import { onMount } from "svelte";
+
+onMount(() => {
+  goto("/finances", { replaceState: true });
+});
 </script>

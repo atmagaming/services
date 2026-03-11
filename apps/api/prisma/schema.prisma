@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  name                 String?
+  passwordHash         String?
+  image                String?
+  canViewTransactions  Boolean  @default(false)
+  canViewRevenueShares Boolean  @default(false)
+  canViewPersonalData  Boolean  @default(false)
+  canEditPeople        Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Person {
+  id                 String   @id @default(cuid())
+  name               String
+  nickname           String   @default("")
+  image              String   @default("")
+  firstName                String   @default("")
+  lastName                 String   @default("")
+  identification           String   @default("")
+  passportNumber           String   @default("")
+  passportIssueDate        String   @default("")
+  passportIssuingAuthority String   @default("")
+  weeklySchedule           String   @default("4,4,4,4,4,0,0")
+  hourlyRatePaid     Float    @default(0)
+  hourlyRateAccrued  Float    @default(0)
+  email              String   @default("")
+  notionPersonPageId String   @default("")
+  telegramAccount    String   @default("")
+  discord            String   @default("")
+  linkedin           String   @default("")
+  description        String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  statusChanges   PersonStatusChange[]
+  transactions    Transaction[]
+  roles           PersonRole[]
+  documents       PersonDocument[]
+  signingRequests SigningRequest[]
+}
+
+// status values: "inactive" | "working" | "vacation" | "sick_leave"
+model PersonStatusChange {
+  id       String @id @default(cuid())
+  personId String
+  date     String
+  status   String
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model PersonDocument {
+  id       String @id @default(cuid())
+  personId String
+  name     String
+  url      String @default("")
+  category String @default("other")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model PersonRole {
+  id       String @id @default(cuid())
+  personId String
+  name     String
+  notionId String @default("")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model SigningRequest {
+  id         String   @id @default(cuid())
+  personId   String
+  category   String
+  requestId  String
+  adminUrl   String
+  personUrl  String
+  createdAt  DateTime @default(now())
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  factualDate   String?
+  logicalDate   String
+  amount        Float
+  currency      String   @default("USD")
+  usdEquivalent Float    @default(0)
+  note          String   @default("")
+  category      String   @default("")
+  method        String   @default("Paid")
+  personId      String?
+  payeeName     String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  person Person? @relation(fields: [personId], references: [id])
+}

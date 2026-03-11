@@ -2,9 +2,18 @@ FROM oven/bun:1.2.20-slim
 
 WORKDIR /app
 
+# Copy root workspace files
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+COPY packages/ packages/
 
-COPY . .
+# Copy API app
+COPY apps/api/ apps/api/
 
-CMD ["bun", "run", "src/index.tsx"]
+# Install dependencies
+RUN cd apps/api && bun install --production
+
+# Generate Prisma client
+COPY apps/api/prisma apps/api/prisma
+RUN cd apps/api && bunx prisma generate
+
+CMD ["bun", "run", "apps/api/src/index.tsx"]
