@@ -1,0 +1,10 @@
+services:
+  - type: web
+    runtime: static
+    name: atma-web
+    buildCommand: bun install --frozen-lockfile && bun run build
+    staticPublishPath: out
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

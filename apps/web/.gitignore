@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+
+# Build output
+.next
+out
+dist
+
+# IDE
+.vscode
+.idea
+
+# Environment & secrets
+.env
+.env.*
+
+# Claude / MCP config
+.claude
+.mcp.json
+
+# OS files
+.DS_Store
+.playwright-mcp/
