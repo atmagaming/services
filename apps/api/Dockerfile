@@ -2,6 +2,9 @@ FROM oven/bun:1.2.20-slim
 
 WORKDIR /app
 
+# Install build tools for native modules (better-sqlite3)
+RUN apt-get update && apt-get install -y python3 make gcc g++ && rm -rf /var/lib/apt/lists/*
+
 # Copy root workspace files
 COPY package.json bun.lock ./
 COPY packages/ packages/
