@@ -1,0 +1,20 @@
+<script lang="ts">
+import TransactionsTable from "$components/transactions-table";
+
+const { data } = $props();
+const payload = $derived(data.data);
+</script>
+
+{#if payload}
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-foreground">Transactions</h1>
+      <p class="mt-1 text-sm text-muted-foreground">Browse and filter all recorded transactions.</p>
+    </div>
+    <TransactionsTable
+      transactions={payload.transactions}
+      highlightPersonIds={payload.highlightPersonIds}
+      maskedPersonIds={payload.maskedPersonIds}
+    />
+  </div>
+{/if}

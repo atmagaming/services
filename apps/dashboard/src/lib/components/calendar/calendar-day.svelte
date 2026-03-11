@@ -1,0 +1,31 @@
+<script lang="ts">
+import { Calendar as CalendarPrimitive } from "bits-ui";
+import { buttonVariants } from "$components/button";
+import { cn } from "$lib/utils.js";
+
+let { ref = $bindable(null), class: className, ...restProps }: CalendarPrimitive.DayProps = $props();
+</script>
+
+<CalendarPrimitive.Day
+	bind:ref
+	class={cn(
+		buttonVariants({ variant: "ghost" }),
+		"relative flex size-(--cell-size) flex-col items-center justify-center gap-1 p-0 leading-none font-normal whitespace-nowrap select-none",
+		"[&[data-today]]:after:absolute [&[data-today]]:after:bottom-1 [&[data-today]]:after:left-1/2 [&[data-today]]:after:-translate-x-1/2 [&[data-today]]:after:size-1 [&[data-today]]:after:rounded-full [&[data-today]]:after:bg-primary [&[data-today][data-selected]]:after:bg-primary-foreground [&[data-today][data-disabled]]:text-muted-foreground",
+		"data-[selected]:bg-primary dark:data-[selected]:hover:bg-accent/50 data-[selected]:text-primary-foreground",
+		// Outside months
+		"[&[data-outside-month]:not([data-selected])]:text-muted-foreground [&[data-outside-month]:not([data-selected])]:hover:text-accent-foreground",
+		// Disabled
+		"data-[disabled]:text-muted-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+		// Unavailable
+		"data-[unavailable]:text-muted-foreground data-[unavailable]:line-through",
+		// hover
+		"dark:hover:text-accent-foreground",
+		// focus
+		"focus:border-ring focus:ring-ring/50 focus:relative",
+		// inner spans
+		"[&>span]:text-xs [&>span]:opacity-70",
+		className
+	)}
+	{...restProps}
+/>
