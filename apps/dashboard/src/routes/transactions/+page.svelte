@@ -1,8 +1,20 @@
 <script lang="ts">
+import { onMount } from "svelte";
 import TransactionsTable from "$components/transactions-table";
+import { apiJson } from "$lib/api";
+import type { Transaction } from "$lib/types";
 
-const { data } = $props();
-const payload = $derived(data.data);
+interface TransactionsData {
+  transactions: Transaction[];
+  highlightPersonIds: string[];
+  maskedPersonIds: string[];
+}
+
+let payload = $state<TransactionsData | null>(null);
+
+onMount(async () => {
+  payload = await apiJson<TransactionsData>("/data/transactions");
+});
 </script>
 
 {#if payload}

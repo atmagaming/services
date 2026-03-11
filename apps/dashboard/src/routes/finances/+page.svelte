@@ -1,12 +1,44 @@
 <script lang="ts">
+import { onMount } from "svelte";
 import ExpenseChart from "$components/expense-chart";
 import InvestmentChart from "$components/investment-chart";
 import RevenueChart from "$components/revenue-chart";
 import SummaryCard from "$components/summary-card";
 import TeamBreakdownTable from "$components/team-breakdown-table";
+import { apiJson } from "$lib/api";
+import type { InvestmentPoint, MonthlyExpense, ProjectionMonth, RevenueShare } from "$lib/types";
 
-const { data } = $props();
-const dashboard = $derived(data.data);
+interface DashboardData {
+  cards: { label: string; value: number; color: string; bg: string }[];
+  monthlyExpenses: MonthlyExpense[];
+  projections: ProjectionMonth[];
+  revenueShares: RevenueShare[];
+  investmentTimeline: InvestmentPoint[];
+  teamRows: {
+    personId: string;
+    name: string;
+    hoursPerWeek: number;
+    paidRate: number;
+    investedRate: number;
+    monthlyPaid: number;
+    monthlyAccrued: number;
+    monthlyTotal: number;
+    currentInvestment: number;
+    currentShare: number;
+    projectedShare: number;
+    isCurrentUser: boolean;
+  }[];
+  currentPersonId: string | null;
+  canViewRevenueShares: boolean;
+  isAuthenticated: boolean;
+  teamCount: number;
+}
+
+let dashboard = $state<DashboardData | null>(null);
+
+onMount(async () => {
+  dashboard = await apiJson<DashboardData>("/data/all");
+});
 </script>
 
 {#if dashboard}

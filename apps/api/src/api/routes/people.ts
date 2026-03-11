@@ -12,6 +12,15 @@ import { sendDocumentForSigning } from "../signer";
 
 const people = new Hono();
 
+people.get("/config", (c) => {
+  const ndaId = apiEnv.GOOGLE_DRIVE_NDA_TEMPLATE_ID;
+  const contractId = apiEnv.GOOGLE_DRIVE_CONTRACT_TEMPLATE_ID;
+  return c.json({
+    ndaTemplateUrl: ndaId ? `https://docs.google.com/document/d/${ndaId}/edit` : "",
+    contractTemplateUrl: contractId ? `https://docs.google.com/document/d/${contractId}/edit` : "",
+  });
+});
+
 people.get("/", async (c) => {
   const user = getUser(c);
   const canViewPersonalData = user?.canViewPersonalData ?? false;

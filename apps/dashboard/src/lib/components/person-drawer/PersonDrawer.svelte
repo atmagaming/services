@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, tick, untrack } from "svelte";
 import { fly } from "svelte/transition";
-import { invalidateAll } from "$app/navigation";
+import { apiFetch, apiJson } from "$lib/api";
 import { Button } from "$components/button";
 import PersonRoles from "$components/person-roles";
 import type { Person } from "$lib/types";
@@ -17,6 +17,7 @@ const {
   onClose = () => {},
   onSaved = (_person: Person) => {},
   onFormChange = (_form: ReturnType<typeof buildForm>, _roles: RoleOption[]) => {},
+  onDataChanged = async () => {},
   focusName = false,
   ndaTemplateUrl,
   contractTemplateUrl,
@@ -26,6 +27,7 @@ const {
   onClose?: () => void;
   onSaved?: (person: Person) => void;
   onFormChange?: (form: ReturnType<typeof buildForm>, roles: RoleOption[]) => void;
+  onDataChanged?: () => Promise<void>;
   focusName?: boolean;
   ndaTemplateUrl: string;
   contractTemplateUrl: string;
@@ -67,11 +69,8 @@ let availableRoles = $state<RoleOption[]>([]);
 
 onMount(async () => {
   try {
-    const res = await fetch("/api/roles");
-    if (res.ok) {
-      const data = (await res.json()) as { roles: RoleOption[] };
-      availableRoles = data.roles;
-    }
+    const data = await apiJson<{ roles: RoleOption[] }>("/roles");
+    availableRoles = data.roles;
   } catch (e) {
     console.error(`Failed to fetch roles: ${(e as Error).message}`);
   }
@@ -124,9 +123,8 @@ async function doAutoSave() {
   autoSaveTimer = null;
   autoSaveStatus = "saving";
   try {
-    const res = await fetch(`/api/people/${person.id}`, {
+    const res = await apiFetch(`/people/${person.id}`, {
       method: "PATCH",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ ...form, roles }),
     });
     if (!res.ok) {
@@ -157,7 +155,7 @@ async function uploadAvatar(file: File) {
   try {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch(`/api/people/${person.id}/image`, { method: "POST", body: fd });
+    const res = await apiFetch(`/people/${person.id}/image`, { method: "POST", body: fd });
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { message?: string };
       console.error(`Avatar upload failed: ${body.message ?? "unknown"}`);
@@ -176,13 +174,13 @@ async function uploadAvatar(file: File) {
 
 async function deletePerson() {
   if (!person || !confirm("Delete this person? This cannot be undone.")) return;
-  const res = await fetch(`/api/people/${person.id}`, { method: "DELETE" });
+  const res = await apiFetch(`/people/${person.id}`, { method: "DELETE" });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     alert(body.message ?? "Failed to delete");
     return;
   }
-  await invalidateAll();
+  await onDataChanged();
   onClose();
 }
 
@@ -234,8 +232,8 @@ const canSign = $derived(missingSigningFields.length === 0);
     <PersonDrawerWorkConditions bind:form {canEditPeople} />
 
     {#if !isAddMode && person}
-      <PersonDrawerStatus {person} {canEditPeople} />
-      <PersonDrawerLegal bind:form {canEditPeople} {person} {canSign} {missingSigningFields} {ndaTemplateUrl} {contractTemplateUrl} />
+      <PersonDrawerStatus {person} {canEditPeople} {onDataChanged} />
+      <PersonDrawerLegal bind:form {canEditPeople} {person} {canSign} {missingSigningFields} {ndaTemplateUrl} {contractTemplateUrl} {onDataChanged} />
     {/if}
 
     <div class="flex items-center justify-between">

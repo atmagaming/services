@@ -45,3 +45,4 @@ cache/
 
 # CLI history
 .cli_history
+generated/prisma

@@ -14,6 +14,7 @@ const {
   missingSigningFields = [],
   ndaTemplateUrl,
   contractTemplateUrl,
+  onDataChanged = async () => {},
 }: {
   form: {
     firstName: string;
@@ -26,6 +27,7 @@ const {
   missingSigningFields?: string[];
   ndaTemplateUrl: string;
   contractTemplateUrl: string;
+  onDataChanged?: () => Promise<void>;
 } = $props();
 
 let viewingDocUrl = $state<string | null>(null);
@@ -79,7 +81,7 @@ let viewingDocUrl = $state<string | null>(null);
   {/if}
 
   <div class="mt-5">
-    <PersonDocuments {person} canEdit={canEditPeople} {canSign} {missingSigningFields} {ndaTemplateUrl} {contractTemplateUrl} bind:viewingDocUrl />
+    <PersonDocuments {person} canEdit={canEditPeople} {canSign} {missingSigningFields} {ndaTemplateUrl} {contractTemplateUrl} {onDataChanged} bind:viewingDocUrl />
   </div>
 </section>
 

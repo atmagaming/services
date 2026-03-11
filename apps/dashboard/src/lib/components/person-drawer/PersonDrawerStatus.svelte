@@ -1,6 +1,6 @@
 <script lang="ts">
 import { untrack } from "svelte";
-import { invalidateAll } from "$app/navigation";
+import { apiFetch } from "$lib/api";
 import StatusChangeRow from "$components/status-change-row";
 import type { Person, PersonStatus, PersonStatusChange } from "$lib/types";
 import "$lib/date-extensions";
@@ -19,7 +19,15 @@ const STATUS_LABELS: Record<PersonStatus, string> = {
   inactive: "Inactive",
 };
 
-const { person, canEditPeople = false }: { person: Person; canEditPeople?: boolean } = $props();
+const {
+  person,
+  canEditPeople = false,
+  onDataChanged = async () => {},
+}: {
+  person: Person;
+  canEditPeople?: boolean;
+  onDataChanged?: () => Promise<void>;
+} = $props();
 
 let localStatusChanges = $state<PersonStatusChange[]>(untrack(() => [...person.statusChanges]));
 
@@ -32,9 +40,8 @@ async function addStatus() {
   const tempEntry: PersonStatusChange = { id: tempId, status: "inactive", date: new Date().toISOString().slice(0, 10) };
   localStatusChanges = [...localStatusChanges, tempEntry];
 
-  const res = await fetch(`/api/people/${person.id}/status`, {
+  const res = await apiFetch(`/people/${person.id}/status`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
     body: JSON.stringify({ status: "inactive", date: tempEntry.date }),
   });
 
@@ -45,15 +52,14 @@ async function addStatus() {
     return;
   }
 
-  void invalidateAll();
+  void onDataChanged();
 }
 
 async function updateStatus(statusId: string, field: "status" | "date", value: string) {
   localStatusChanges = localStatusChanges.map((sc) => (sc.id === statusId ? { ...sc, [field]: value } : sc));
 
-  const res = await fetch(`/api/people/${person.id}/status/${statusId}`, {
+  const res = await apiFetch(`/people/${person.id}/status/${statusId}`, {
     method: "PATCH",
-    headers: { "content-type": "application/json" },
     body: JSON.stringify({ [field]: value }),
   });
 
@@ -62,20 +68,20 @@ async function updateStatus(statusId: string, field: "status" | "date", value: s
     alert(body.message ?? "Failed to update status");
   }
 
-  void invalidateAll();
+  void onDataChanged();
 }
 
 async function deleteStatus(statusId: string) {
   localStatusChanges = localStatusChanges.filter((sc) => sc.id !== statusId);
 
-  const res = await fetch(`/api/people/${person.id}/status/${statusId}`, { method: "DELETE" });
+  const res = await apiFetch(`/people/${person.id}/status/${statusId}`, { method: "DELETE" });
 
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     alert(body.message ?? "Failed to delete status");
   }
 
-  void invalidateAll();
+  void onDataChanged();
 }
 </script>
 

@@ -21,9 +21,9 @@ async function handleSubmit() {
 
   loading = true;
   try {
-    const res = await fetch("/api/auth/reset-password", {
+    const { apiFetch } = await import("$lib/api");
+    const res = await apiFetch("/auth/reset-password", {
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ token, password }),
     });
     if (!res.ok) {

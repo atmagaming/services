@@ -1,8 +1,11 @@
 <script lang="ts">
-import { invalidateAll } from "$app/navigation";
+import { onMount } from "svelte";
+import { goto } from "$app/navigation";
 import { Button } from "$components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "$components/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
+import { apiFetch, apiJson } from "$lib/api";
+import { getUser } from "$lib/auth.svelte";
 
 interface UserRecord {
   id: string;
@@ -14,11 +17,20 @@ interface UserRecord {
   canEditPeople: boolean;
 }
 
-const { data }: { data: { data: { users: UserRecord[]; superAdminEmails: string[] } } } = $props();
-const payload = $derived(data.data);
-
+let payload = $state<{ users: UserRecord[]; superAdminEmails: string[] } | null>(null);
 let loading = $state(false);
 let error = $state("");
+
+async function loadData() {
+  const user = getUser();
+  if (!user?.isSuperAdmin) {
+    await goto("/finances", { replaceState: true });
+    return;
+  }
+  payload = await apiJson("/admin");
+}
+
+onMount(loadData);
 
 const PERMISSIONS = [
   { key: "canViewTransactions", label: "Transactions" },
@@ -31,16 +43,15 @@ async function togglePermission(email: string, permission: string, value: boolea
   loading = true;
   error = "";
   try {
-    const res = await fetch("/api/admin", {
+    const res = await apiFetch("/admin", {
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ email, permission, value }),
     });
     if (!res.ok) {
       const responsePayload = await res.json().catch(() => ({}));
       throw new Error(responsePayload?.message ?? "Failed to update permission");
     }
-    await invalidateAll();
+    await loadData();
   } catch (e) {
     error = (e as Error).message ?? "Failed to update permission";
   } finally {
@@ -52,16 +63,15 @@ async function removeAllPermissions(userEmail: string) {
   loading = true;
   error = "";
   try {
-    const res = await fetch("/api/admin", {
+    const res = await apiFetch("/admin", {
       method: "DELETE",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ email: userEmail }),
     });
     if (!res.ok) {
       const responsePayload = await res.json().catch(() => ({}));
       throw new Error(responsePayload?.message ?? "Failed to remove permissions");
     }
-    await invalidateAll();
+    await loadData();
   } catch (e) {
     error = (e as Error).message ?? "Failed to remove permissions";
   } finally {
@@ -70,6 +80,7 @@ async function removeAllPermissions(userEmail: string) {
 }
 </script>
 
+{#if payload}
 <div class="space-y-6">
   <div>
     <h1 class="text-2xl font-bold text-foreground">Admin Management</h1>
@@ -147,3 +158,4 @@ async function removeAllPermissions(userEmail: string) {
     </CardContent>
   </Card>
 </div>
+{/if}

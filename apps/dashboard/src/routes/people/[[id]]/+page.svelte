@@ -1,12 +1,22 @@
 <script lang="ts">
-import { invalidateAll, pushState, replaceState } from "$app/navigation";
+import { onMount } from "svelte";
+import { pushState, replaceState } from "$app/navigation";
+import { page } from "$app/state";
 import { Button } from "$components/button";
 import * as Dialog from "$components/dialog";
 import PeopleTable from "$components/people-table";
 import PersonDrawer from "$components/person-drawer";
+import { apiFetch, apiJson } from "$lib/api";
+import { getUser } from "$lib/auth.svelte";
 import { type Person, Rates } from "$lib/types";
 
-const { data }: { data: import("./$types").PageData } = $props();
+const user = $derived(getUser());
+const canViewPersonalData = $derived(user?.canViewPersonalData ?? false);
+const canEditPeople = $derived(user?.canEditPeople ?? false);
+
+let basePeople = $state<Person[]>([]);
+let ndaTemplateUrl = $state("");
+let contractTemplateUrl = $state("");
 
 const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
 
@@ -17,7 +27,22 @@ function isActive(person: Person): boolean {
 }
 
 const overrides = $state<Record<string, Person>>({});
-const people = $derived(data.people.map((p) => overrides[p.id] ?? p));
+const people = $derived(basePeople.map((p) => overrides[p.id] ?? p));
+
+async function loadPeople() {
+  const data = await apiJson<{ people: Person[] }>("/people");
+  basePeople = data.people;
+}
+
+onMount(async () => {
+  const [peopleData, config] = await Promise.all([
+    apiJson<{ people: Person[] }>("/people"),
+    apiJson<{ ndaTemplateUrl: string; contractTemplateUrl: string }>("/people/config"),
+  ]);
+  basePeople = peopleData.people;
+  ndaTemplateUrl = config.ndaTemplateUrl;
+  contractTemplateUrl = config.contractTemplateUrl;
+});
 
 function countMondaysThisMonth(): number {
   const now = new Date();
@@ -45,7 +70,7 @@ function onPersonFormChange(
   roles: { notionId: string; name: string }[],
 ) {
   if (!selectedPersonId) return;
-  const base = data.people.find((p) => p.id === selectedPersonId);
+  const base = basePeople.find((p) => p.id === selectedPersonId);
   if (!base) return;
 
   const schedule = form.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
@@ -88,8 +113,14 @@ let activeTab = $state<"active" | "inactive">("active");
 let rateMode = $state<"hourly" | "sprint" | "monthly">("hourly");
 const displayedPeople = $derived(activeTab === "active" ? activePeople : inactivePeople);
 
+const personIdFromUrl = $derived(page.params.id);
 // svelte-ignore state_referenced_locally
-let selectedPersonId = $state<string | undefined>(data.personId);
+let selectedPersonId = $state<string | undefined>(undefined);
+
+$effect(() => {
+  if (personIdFromUrl) selectedPersonId = personIdFromUrl;
+});
+
 let focusName = $state(false);
 
 const drawerPerson = $derived(
@@ -101,14 +132,13 @@ const drawerOpen = $derived(drawerPerson !== undefined);
 async function openAddDrawer() {
   creatingPerson = true;
   try {
-    const res = await fetch("/api/people", {
+    const res = await apiFetch("/people", {
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: "New Person" }),
     });
     if (!res.ok) return;
     const { person } = (await res.json()) as { person: Person };
-    await invalidateAll();
+    await loadPeople();
     focusName = true;
     selectedPersonId = person.id;
     pushState(`/people/${person.id}`, {});
@@ -129,6 +159,10 @@ function closeDrawer() {
   selectedPersonId = undefined;
   replaceState("/people", {});
 }
+
+async function onDataChanged() {
+  await loadPeople();
+}
 </script>
 
 <Dialog.Dialog open={creatingPerson}>
@@ -141,15 +175,15 @@ function closeDrawer() {
 <div class="mb-4 flex shrink-0 items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-foreground">
-      {data.canViewPersonalData ? "HR — People" : "Team"}
+      {canViewPersonalData ? "HR — People" : "Team"}
     </h1>
     <p class="mt-1 text-sm text-muted-foreground">
-      {data.canViewPersonalData
+      {canViewPersonalData
         ? "Full team directory with contact info and HR data."
         : "Active team members."}
     </p>
   </div>
-  {#if data.canEditPeople}
+  {#if canEditPeople}
     <Button onclick={openAddDrawer}>Add Person</Button>
   {/if}
 </div>
@@ -166,10 +200,10 @@ function closeDrawer() {
       class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "inactive" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
       onclick={() => (activeTab = "inactive")}
     >
-      {data.canViewPersonalData ? "Inactive / Candidates" : "Inactive"} ({inactivePeople.length})
+      {canViewPersonalData ? "Inactive / Candidates" : "Inactive"} ({inactivePeople.length})
     </button>
   </div>
-  {#if data.canViewPersonalData}
+  {#if canViewPersonalData}
     <div class="flex rounded-md border border-border bg-muted/50 p-0.5">
       {#each ["hourly", "sprint", "monthly"] as mode}
         <button
@@ -187,21 +221,22 @@ function closeDrawer() {
   <div class="min-w-0 flex-1 rounded-lg border border-border bg-card h-fit">
     <PeopleTable
       people={displayedPeople}
-      canViewPersonalData={data.canViewPersonalData}
-      onEditPerson={data.canViewPersonalData ? openEditDrawer : undefined}
+      {canViewPersonalData}
+      onEditPerson={canViewPersonalData ? openEditDrawer : undefined}
       {rateMode}
     />
   </div>
   {#if drawerOpen}
     <PersonDrawer
       person={drawerPerson ?? null}
-      canEditPeople={data.canEditPeople}
+      {canEditPeople}
       onClose={closeDrawer}
       onSaved={onPersonSaved}
       onFormChange={onPersonFormChange}
+      {onDataChanged}
       {focusName}
-      ndaTemplateUrl={data.ndaTemplateUrl}
-      contractTemplateUrl={data.contractTemplateUrl}
+      {ndaTemplateUrl}
+      {contractTemplateUrl}
     />
   {/if}
 </div>

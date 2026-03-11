@@ -1,5 +1,5 @@
 <script lang="ts">
-import { invalidateAll } from "$app/navigation";
+import { API_URL, apiFetch } from "$lib/api";
 import CopyButton from "$components/copy-button";
 import * as Dialog from "$components/dialog";
 import ExternalLink from "$components/external-link";
@@ -13,6 +13,7 @@ let {
   missingSigningFields = [],
   ndaTemplateUrl,
   contractTemplateUrl,
+  onDataChanged = async () => {},
   viewingDocUrl = $bindable<string | null>(null),
 }: {
   person: Person;
@@ -21,6 +22,7 @@ let {
   missingSigningFields?: string[];
   ndaTemplateUrl: string;
   contractTemplateUrl: string;
+  onDataChanged?: () => Promise<void>;
   viewingDocUrl?: string | null;
 } = $props();
 
@@ -41,6 +43,10 @@ let signDialogOpen = $state(false);
 let signDialogCategory = $state<"nda" | "contract" | null>(null);
 let signUrls = $state<{ adminUrl: string; personUrl: string } | null>(null);
 
+function documentUrl(driveId: string): string {
+  return `${API_URL}/documents/${driveId}`;
+}
+
 async function uploadFile(file: File, category: DocCategory) {
   uploading = category;
   uploadErrors = { ...uploadErrors, [category]: "" };
@@ -49,7 +55,7 @@ async function uploadFile(file: File, category: DocCategory) {
     fd.append("file", file);
     fd.append("name", file.name);
     fd.append("category", category);
-    const res = await fetch(`/api/people/${person.id}/documents`, { method: "POST", body: fd });
+    const res = await apiFetch(`/people/${person.id}/documents`, { method: "POST", body: fd });
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { message?: string };
       uploadErrors = { ...uploadErrors, [category]: body.message ?? "Upload failed" };
@@ -57,7 +63,7 @@ async function uploadFile(file: File, category: DocCategory) {
     }
     const input = fileInputs[category];
     if (input) input.value = "";
-    await invalidateAll();
+    await onDataChanged();
   } catch (e) {
     uploadErrors = { ...uploadErrors, [category]: `Upload failed: ${(e as Error).message}` };
   } finally {
@@ -67,13 +73,13 @@ async function uploadFile(file: File, category: DocCategory) {
 
 async function deleteDocument(docId: string) {
   if (!confirm("Remove this document?")) return;
-  const res = await fetch(`/api/people/${person.id}/documents/${docId}`, { method: "DELETE" });
+  const res = await apiFetch(`/people/${person.id}/documents/${docId}`, { method: "DELETE" });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     alert(body.message ?? "Failed to delete document");
     return;
   }
-  await invalidateAll();
+  await onDataChanged();
 }
 
 async function signDocument(category: "nda" | "contract") {
@@ -85,9 +91,8 @@ async function signDocument(category: "nda" | "contract") {
   signDialogCategory = category;
   signDialogOpen = true;
   try {
-    const res = await fetch(`/api/people/${person.id}/sign`, {
+    const res = await apiFetch(`/people/${person.id}/sign`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ category }),
     });
     const data = (await res.json()) as { adminUrl?: string; personUrl?: string; message?: string };
@@ -150,13 +155,13 @@ async function signDocument(category: "nda" | "contract") {
             <div class="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2">
               <button
                 class="flex-1 text-left text-sm font-medium text-primary hover:underline"
-                onclick={() => (viewingDocUrl = `/api/documents/${doc.url}`)}
+                onclick={() => (viewingDocUrl = documentUrl(doc.url))}
               >
                 {doc.name}
               </button>
               <div class="flex items-center gap-1">
                 <a
-                  href={`/api/documents/${doc.url}`}
+                  href={documentUrl(doc.url)}
                   download={doc.name}
                   class="rounded p-1 text-muted-foreground hover:text-foreground"
                   aria-label="Download"

@@ -35,7 +35,7 @@ $effect(() => {
 });
 
 function handleStatusChange(value: string) {
-  localStatus = value;
+  localStatus = value as PersonStatus;
   onUpdate("status", value);
 }
 </script>

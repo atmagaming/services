@@ -1,8 +1,9 @@
 <script lang="ts">
-import { goto, invalidateAll } from "$app/navigation";
+import { goto } from "$app/navigation";
 import { page } from "$app/state";
 import { Avatar, AvatarFallback, AvatarImage } from "$components/avatar";
 import { Button } from "$components/button";
+import { logout } from "$lib/auth.svelte";
 import type { SessionUser } from "$lib/types";
 
 const { user = null }: { user: SessionUser | null } = $props();
@@ -17,8 +18,7 @@ const navLinks = $derived(user?.isSuperAdmin ? [...links, { href: "/admin", labe
 const userInitial = $derived((user?.name ?? user?.email ?? "?")[0]?.toUpperCase() ?? "?");
 
 async function signOut() {
-  await fetch("/api/auth/logout", { method: "POST" });
-  await invalidateAll();
+  logout();
   await goto("/login");
 }
 </script>
