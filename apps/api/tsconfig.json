@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    // Environment setup & latest features
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": true,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    // Path aliases
+    "baseUrl": "./src",
+    "paths": {
+      "@agentic": ["agentic/index"],
+      "@agentic/*": ["agentic/*"],
+      "@tools": ["tools/index"],
+      "@tools/*": ["tools/*"],
+      "@components": ["app-view/components/index"],
+      "@components/*": ["app-view/components/*"],
+      "@hooks": ["app-view/hooks/index"],
+      "@hooks/*": ["app-view/hooks/*"],
+      "@providers": ["app-view/providers/index"],
+      "@providers/*": ["app-view/providers/*"]
+    },
+
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false,
+
+    // Additional
+    "useDefineForClassFields": false
+  }
+}
