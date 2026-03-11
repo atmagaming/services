@@ -9,6 +9,9 @@ COPY packages/ packages/
 # Copy API app
 COPY apps/api/ apps/api/
 
+# Copy dashboard package.json for workspace resolution (no source code needed)
+COPY apps/dashboard/package.json apps/dashboard/package.json
+
 # Install dependencies
 RUN cd apps/api && bun install --production
 
