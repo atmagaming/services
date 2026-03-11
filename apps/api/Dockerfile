@@ -13,7 +13,7 @@ COPY apps/api/ apps/api/
 COPY apps/dashboard/package.json apps/dashboard/package.json
 
 # Install dependencies
-RUN cd apps/api && bun install --production
+RUN cd apps/api && bun install
 
 # Generate Prisma client
 COPY apps/api/prisma apps/api/prisma
