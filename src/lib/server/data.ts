@@ -46,8 +46,6 @@ export function countMondaysInMonth(year: number, month: number): number {
   return count;
 }
 
-const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
-
 type PersonRecord = Awaited<
   ReturnType<typeof prisma.person.findMany<{ include: { statusChanges: true; documents: true; roles: true } }>>
 >[number];
@@ -63,7 +61,7 @@ export function mapPersonRecord(r: PersonRecord, mondays: number): Person {
   const workingChange = sorted.find((c) => c.status === "working");
   const inactiveChange = sorted.findLast((c) => c.status === "inactive");
   const latest = sorted.at(-1);
-  const active = latest !== undefined && ACTIVE_STATUSES.has(latest.status);
+  const active = latest !== undefined && latest.status !== "inactive";
 
   const hourlyRate = new Rates(r.hourlyRatePaid, r.hourlyRateAccrued);
   const monthlyPaid = hoursPerWeek * hourlyRate.paid * mondays;

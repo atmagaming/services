@@ -85,6 +85,7 @@ const inactivePeople = $derived(people.filter((p) => !isActive(p)));
 
 let creatingPerson = $state(false);
 let activeTab = $state<"active" | "inactive">("active");
+let rateMode = $state<"hourly" | "sprint" | "monthly">("hourly");
 const displayedPeople = $derived(activeTab === "active" ? activePeople : inactivePeople);
 
 // svelte-ignore state_referenced_locally
@@ -153,19 +154,33 @@ function closeDrawer() {
   {/if}
 </div>
 
-<div class="flex shrink-0 gap-2 border-b border-border">
-  <button
-    class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "active" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
-    onclick={() => (activeTab = "active")}
-  >
-    Active ({activePeople.length})
-  </button>
-  <button
-    class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "inactive" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
-    onclick={() => (activeTab = "inactive")}
-  >
-    {data.canViewPersonalData ? "Inactive / Candidates" : "Inactive"} ({inactivePeople.length})
-  </button>
+<div class="flex shrink-0 items-center justify-between border-b border-border">
+  <div class="flex gap-2">
+    <button
+      class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "active" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+      onclick={() => (activeTab = "active")}
+    >
+      Active ({activePeople.length})
+    </button>
+    <button
+      class={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "inactive" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+      onclick={() => (activeTab = "inactive")}
+    >
+      {data.canViewPersonalData ? "Inactive / Candidates" : "Inactive"} ({inactivePeople.length})
+    </button>
+  </div>
+  {#if data.canViewPersonalData}
+    <div class="flex rounded-md border border-border bg-muted/50 p-0.5">
+      {#each ["hourly", "sprint", "monthly"] as mode}
+        <button
+          class={`rounded px-3 py-1 text-xs font-medium transition-colors ${rateMode === mode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          onclick={() => (rateMode = mode as typeof rateMode)}
+        >
+          {mode === "hourly" ? "Hourly" : mode === "sprint" ? "Sprint" : "Monthly"}
+        </button>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <div class="mt-4 flex min-h-0 flex-1 gap-4">
@@ -174,6 +189,7 @@ function closeDrawer() {
       people={displayedPeople}
       canViewPersonalData={data.canViewPersonalData}
       onEditPerson={data.canViewPersonalData ? openEditDrawer : undefined}
+      {rateMode}
     />
   </div>
   {#if drawerOpen}

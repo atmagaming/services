@@ -3,17 +3,31 @@ import DollarSign from "@lucide/svelte/icons/dollar-sign";
 import CopyButton from "$components/copy-button";
 import Sensitive from "$components/sensitive";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
+import * as Tooltip from "$components/tooltip";
 import type { Person, PersonStatus } from "$lib/types";
+
+export type RateMode = "hourly" | "sprint" | "monthly";
 
 const {
   people = [],
   canViewPersonalData = false,
   onEditPerson,
+  rateMode = "hourly",
 }: {
   people: Person[];
   canViewPersonalData?: boolean;
   onEditPerson?: (person: Person) => void;
+  rateMode?: RateMode;
 } = $props();
+
+const AVERAGE_WEEKS_PER_MONTH = 52 / 12;
+
+function rateValue(person: Person, type: "paid" | "accrued"): number {
+  const hourly = person.hourlyRate[type];
+  if (rateMode === "hourly") return hourly;
+  if (rateMode === "sprint") return person.hoursPerWeek * hourly;
+  return person.hoursPerWeek * hourly * AVERAGE_WEEKS_PER_MONTH;
+}
 
 const STATUS_LABELS: Record<PersonStatus, string> = {
   working: "Working",
@@ -36,8 +50,9 @@ function getLatestStatus(person: Person): PersonStatus {
   return sorted.at(-1)?.status ?? "inactive";
 }
 
-const maxPaidRate = $derived(Math.max(0, ...people.map((p) => p.hourlyRate.paid)));
-const maxAccruedRate = $derived(Math.max(0, ...people.map((p) => p.hourlyRate.accrued)));
+const maxPaidRate = $derived(Math.max(0, ...people.map((p) => rateValue(p, "paid"))));
+const maxAccruedRate = $derived(Math.max(0, ...people.map((p) => rateValue(p, "accrued"))));
+
 const maxScheduleHours = $derived(Math.max(0, ...people.flatMap((p) => p.weeklySchedule.split(",").map(Number))));
 
 function heatStyle(value: number, max: number, hue: number): string {
@@ -56,8 +71,30 @@ function heatStyle(value: number, max: number, hue: number): string {
       <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Roles</TableHead>
       <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Status</TableHead>
       <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Schedule</TableHead>
-      <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Rate (Paid)</TableHead>
-      <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Rate (Accrued)</TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">
+        <Tooltip.Provider>
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              {#snippet child({ props })}
+                <span {...props} class="cursor-default">Paid</span>
+              {/snippet}
+            </Tooltip.Trigger>
+            <Tooltip.Content>Paid - direct compensation to the person</Tooltip.Content>
+          </Tooltip.Root>
+        </Tooltip.Provider>
+      </TableHead>
+      <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">
+        <Tooltip.Provider>
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              {#snippet child({ props })}
+                <span {...props} class="cursor-default">Accrued</span>
+              {/snippet}
+            </Tooltip.Trigger>
+            <Tooltip.Content>Accrued - value invested into the project</Tooltip.Content>
+          </Tooltip.Root>
+        </Tooltip.Provider>
+      </TableHead>
       <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Email</TableHead>
       <TableHead class="sticky top-0 z-10 border-b border-border bg-card text-center">Links</TableHead>
     </TableRow>
@@ -110,20 +147,22 @@ function heatStyle(value: number, max: number, hue: number): string {
         </TableCell>
         <TableCell class="px-4 py-2">
           <Sensitive visible={canViewPersonalData}>
+            {@const paid = rateValue(person, "paid")}
             <div class="flex items-center justify-center">
-              <div class="flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-xs" style={heatStyle(person.hourlyRate.paid, maxPaidRate, 30)}>
+              <div class="flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-xs" style={heatStyle(paid, maxPaidRate, 30)}>
                 <DollarSign class="size-3 shrink-0" />
-                {person.hourlyRate.paid.toFixed(2)}
+                {paid.toFixed(rateMode === "hourly" ? 2 : 0)}
               </div>
             </div>
           </Sensitive>
         </TableCell>
         <TableCell class="px-4 py-2">
           <Sensitive visible={canViewPersonalData}>
+            {@const accrued = rateValue(person, "accrued")}
             <div class="flex items-center justify-center">
-              <div class="flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-xs" style={heatStyle(person.hourlyRate.accrued, maxAccruedRate, 45)}>
+              <div class="flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-xs" style={heatStyle(accrued, maxAccruedRate, 45)}>
                 <DollarSign class="size-3 shrink-0" />
-                {person.hourlyRate.accrued.toFixed(2)}
+                {accrued.toFixed(rateMode === "hourly" ? 2 : 0)}
               </div>
             </div>
           </Sensitive>
