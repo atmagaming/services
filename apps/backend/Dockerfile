@@ -9,17 +9,16 @@ RUN apt-get update && apt-get install -y python3 make gcc g++ && rm -rf /var/lib
 COPY package.json bun.lock ./
 COPY packages/ packages/
 
-# Copy API app
-COPY apps/api/ apps/api/
+# Copy backend app
+COPY apps/backend/ apps/backend/
 
 # Copy dashboard package.json for workspace resolution (no source code needed)
 COPY apps/dashboard/package.json apps/dashboard/package.json
 
 # Install dependencies
-RUN cd apps/api && bun install
+RUN cd apps/backend && bun install
 
 # Generate Prisma client
-COPY apps/api/prisma apps/api/prisma
-RUN cd apps/api && bunx prisma generate
+RUN cd apps/backend && bunx prisma generate
 
-CMD ["bun", "run", "apps/api/src/index.tsx"]
+CMD ["bun", "run", "apps/backend/src/index.tsx"]
