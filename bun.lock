@@ -9,8 +9,8 @@
         "typescript": "^5.9.3",
       },
     },
-    "apps/api": {
-      "name": "@atma/api",
+    "apps/backend": {
+      "name": "@atma/backend",
       "version": "1.0.0",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.71.2",
@@ -155,7 +155,7 @@
 
     "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.71.2", "", { "dependencies": { "json-schema-to-ts": "^3.1.1" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-TGNDEUuEstk/DKu0/TflXAEt+p+p/WhTlFzEnoosvbaDU2LTjm42igSdlL0VijrKpWejtOKxX0b8A7uc+XiSAQ=="],
 
-    "@atma/api": ["@atma/api@workspace:apps/api"],
+    "@atma/backend": ["@atma/backend@workspace:apps/backend"],
 
     "@atma/dashboard": ["@atma/dashboard@workspace:apps/dashboard"],
 
