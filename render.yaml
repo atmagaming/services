@@ -2,7 +2,7 @@ services:
   - type: web
     name: atma-api
     runtime: docker
-    dockerfilePath: apps/api/Dockerfile
+    dockerfilePath: apps/backend/Dockerfile
     dockerContext: .
     plan: starter
     domains:
