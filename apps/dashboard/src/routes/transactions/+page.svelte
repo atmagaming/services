@@ -13,7 +13,7 @@ interface TransactionsData {
 let payload = $state<TransactionsData | null>(null);
 
 onMount(async () => {
-  payload = await apiJson<TransactionsData>("/data/transactions");
+  payload = await apiJson<TransactionsData>("/finances/transactions");
 });
 </script>
 

@@ -37,7 +37,7 @@ interface DashboardData {
 let dashboard = $state<DashboardData | null>(null);
 
 onMount(async () => {
-  dashboard = await apiJson<DashboardData>("/data/all");
+  dashboard = await apiJson<DashboardData>("/finances");
 });
 </script>
 
