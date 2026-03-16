@@ -1,0 +1,63 @@
+enum IdType {
+  passport
+  national_id
+  drivers_license
+  residence_permit
+}
+
+enum DocumentCategory {
+  nda
+  contract
+  other
+}
+
+model Person {
+  id                 String  @id
+  name               String
+  image              String?
+  firstName          String?
+  lastName           String?
+  idType             IdType?
+  idNumber           String?
+  idIssueDate        String?
+  idIssuingAuthority String?
+  schedule           String  @default("4,4,4,4,4,0,0")
+  hourlyRatePaid     Float   @default(0)
+  hourlyRateAccrued  Float   @default(0)
+  email              String?
+  telegram           String?
+  discord            String?
+  linkedin           String?
+  description        String?
+
+  statusChanges PersonStatusChange[]
+  transactions  Transaction[]
+  roles         Role[]
+  documents     PersonDocument[]
+}
+
+enum PersonStatus {
+  inactive
+  working
+  vacation
+  sick_leave
+}
+
+model PersonStatusChange {
+  id       String       @id @default(cuid())
+  personId String
+  date     DateTime
+  status   PersonStatus
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model PersonDocument {
+  id       String           @id @default(cuid())
+  personId String
+  name     String
+  url      String
+  category DocumentCategory
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}

@@ -17,37 +17,14 @@
     // Path aliases
     "baseUrl": "./src",
     "paths": {
-      "@tools": ["bot/tools/index"],
-      "@tools/*": ["bot/tools/*"],
-      "@components": ["bot/app-view/components/index"],
-      "@components/*": ["bot/app-view/components/*"],
-      "@hooks": ["bot/app-view/hooks/index"],
-      "@hooks/*": ["bot/app-view/hooks/*"],
-      "@providers": ["bot/app-view/providers/index"],
-      "@providers/*": ["bot/app-view/providers/*"],
-      "master-agent": ["bot/master-agent"],
-      "models": ["bot/models"],
-      "app-view": ["bot/app-view/index"],
-      "app-view/*": ["bot/app-view/*"],
-      "db": ["bot/db/index"],
-      "db/*": ["bot/db/*"],
-      "io/*": ["bot/io/*"],
-      "jobs": ["bot/jobs/index"],
-      "jobs/*": ["bot/jobs/*"],
-      "services/*": ["bot/services/*"],
-      "streaming-agent": ["bot/streaming-agent/index"],
-      "streaming-agent/*": ["bot/streaming-agent/*"],
-      "tools/*": ["bot/tools/*"],
-      "webhooks/*": ["bot/webhooks/*"],
-      "bot/utils": ["bot/utils/index"],
-      "bot/utils/*": ["bot/utils/*"]
+      "@prisma/client": ["../generated/prisma/client"]
     },
 
     // Best practices
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noImplicitOverride": true,
 
     // Some stricter flags (disabled by default)

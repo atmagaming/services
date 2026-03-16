@@ -1,0 +1,22 @@
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  name                 String?
+  passwordHash         String?
+  image                String?
+  canViewTransactions  Boolean  @default(false)
+  canViewRevenueShares Boolean  @default(false)
+  canViewPersonalData  Boolean  @default(false)
+  canEditPeople        Boolean  @default(false)
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+}

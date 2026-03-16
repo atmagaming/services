@@ -1,0 +1,27 @@
+enum TransactionMethod {
+  Paid
+  Accrued
+  Invested
+}
+
+enum Currency {
+  USD
+  EUR
+  CZK
+  UAH
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  factualDate DateTime?
+  logicalDate DateTime
+  amount      Float
+  currency    Currency
+  note        String?
+  category    String?
+  method      TransactionMethod
+  personId    String?
+  payeeName   String?
+
+  person Person? @relation(fields: [personId], references: [id])
+}

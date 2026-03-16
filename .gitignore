@@ -10,3 +10,7 @@ logs/
 cache/
 *.db
 *.db-journal
+.playwright-mcp/
+.nitro/
+.output/
+dev.db
