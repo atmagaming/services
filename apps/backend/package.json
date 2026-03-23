@@ -3,20 +3,25 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./generated/client/index.ts"
+  },
   "config": {
     "version": "0.1.90"
   },
   "packageManager": "bun@1.3.5",
   "scripts": {
     "start": "bun .output/server/index.mjs",
-    "build": "nitro build",
-    "dev": "bun --env-file ../../.env ./node_modules/.bin/nitro dev",
+    "client:generate": "bun scripts/generate-client.ts",
+    "build": "bun run client:generate && nitro build",
+    "dev": "nitro dev --port 10000",
     "format": "biome format --write .",
     "test": "bun test",
     "lint": "tsc --noEmit && biome check .",
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:push": "drizzle-kit push",
     "drizzle:studio": "drizzle-kit studio",
+    "notion:generate": "notion generate",
     "prisma:generate": "prisma generate",
     "prisma:update": "bash scripts/prisma-update.sh",
     "postinstall": "prisma generate && nitro prepare"
@@ -27,6 +32,7 @@
     "@elumixor/event-emitter": "^1.0.7",
     "@elumixor/extensions": "^2.2.0",
     "@elumixor/frontils": "^3.0.15",
+    "@elumixor/notion-orm": "^2.2.1",
     "@google/genai": "^1.34.0",
     "@hono/zod-validator": "^0.7.6",
     "@notionhq/client": "^5.6.0",
@@ -34,7 +40,7 @@
     "@openai/agents": "^0.3.7",
     "@perplexity-ai/perplexity_ai": "^0.18.1",
     "@prisma/adapter-libsql": "^7.4.2",
-    "@prisma/client": "^7.4.2",
+    "@prisma/client": "^7.5.0",
     "@tryfabric/martian": "^1.2.4",
     "@types/node": "^25.0.3",
     "bcryptjs": "^3.0.3",
@@ -72,7 +78,8 @@
     "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.9",
     "nitropack": "latest",
-    "prisma": "^7.4.2",
+    "prisma": "^7.5.0",
+    "ts-morph": "^25.0.1",
     "typescript": "^5.9.3"
   }
 }

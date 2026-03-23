@@ -17,7 +17,8 @@
     // Path aliases
     "baseUrl": "./src",
     "paths": {
-      "@prisma/client": ["../generated/prisma/client"]
+      "@prisma/client": ["../generated/prisma/client"],
+      "@notion/client": ["../generated/notion-orm"]
     },
 
     // Best practices

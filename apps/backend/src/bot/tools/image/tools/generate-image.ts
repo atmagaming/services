@@ -1,4 +1,4 @@
-import { geminiClient } from "services/gemini/gemini";
+import { geminiClient } from "services/gemini";
 import { defineTool } from "streaming-agent";
 import { saveTempFile } from "utils";
 import { z } from "zod";

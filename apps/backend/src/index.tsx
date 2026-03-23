@@ -1,195 +1,164 @@
 import "@elumixor/extensions";
 
-import { JobProvider, Main } from "app-view";
-import { db } from "db";
-import { env } from "env";
-import { Bot, webhookCallback } from "grammy";
-import { TelegramRenderer } from "io/output";
-import { Job, JobQueue } from "jobs";
-import { Listr } from "listr2";
-import { logger } from "logger";
-import { memories } from "services/memories";
-import { skills } from "services/skills";
-import { systemPrompt } from "services/system-prompt";
-import { gramjsClient } from "services/telegram";
-import { transcribeAudio } from "services/transcription";
-import { isBotMentioned } from "bot/utils";
-import { handleNotionWebhook, initPeopleMap } from "webhooks/notion-webhook";
+// HTTP server is managed by Nitro (nitro.config.ts). Bot code below is kept for future re-activation.
 
-const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
-const { id: botChatId, username: botUsername = "", first_name: botName } = await bot.api.getMe();
+// import { JobProvider, Main } from "app-view";
+// import { isBotMentioned } from "bot/utils";
+// import { db } from "db";
+// import { env } from "env";
+// import { Bot, webhookCallback } from "grammy";
+// import { TelegramRenderer } from "io/output";
+// import { Job, JobQueue } from "jobs";
+// import { Listr } from "listr2";
+// import { logger } from "logger";
+// import { memories } from "services/memories";
+// import { skills } from "services/skills";
+// import { systemPrompt } from "services/system-prompt";
+// import { gramjsClient } from "services/telegram";
+// import { transcribeAudio } from "services/transcription";
+// import { handleNotionWebhook, initPeopleMap } from "webhooks/notion-webhook";
 
-await new Listr(
-  [
-    {
-      title: "Initialize database",
-      task: async (_, task) => {
-        const { migrate } = await import("drizzle-orm/bun-sqlite/migrator");
-        migrate(db, { migrationsFolder: "./drizzle" });
-        task.title = "Database initialized";
-      },
-    },
-    { title: "Initialize Google APIs", task: () => import("services/google-api") },
-    {
-      title: "Connect to Telegram",
-      task: (_, task) =>
-        task.newListr(
-          [
-            {
-              title: "Connect GramJS",
-              task: async (_, sub) => {
-                sub.title = await gramjsClient.connect();
-              },
-            },
-            {
-              title: "Pre-fetch chat info",
-              task: async (_, sub) => {
-                sub.title = await gramjsClient.prefetchDefaultChat();
-              },
-            },
-            {
-              title: "Map people to Telegram",
-              task: async (_, sub) => {
-                sub.title = await initPeopleMap();
-              },
-            },
-          ],
-          { concurrent: false },
-        ),
-    },
-    {
-      title: "Sync memories",
-      task: async (_, task) => {
-        task.title = await memories.sync();
-      },
-    },
-    {
-      title: "Sync skills",
-      task: async (_, task) => {
-        task.title = await skills.sync();
-      },
-    },
-    {
-      title: "Sync system prompt",
-      task: async (_, task) => {
-        task.title = await systemPrompt.sync();
-      },
-    },
-  ],
-  { concurrent: true, exitOnError: false },
-).run();
+// const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
+// const { id: botChatId, username: botUsername = "", first_name: botName } = await bot.api.getMe();
+
+// await new Listr(
+//   [
+//     {
+//       title: "Initialize database",
+//       task: async (_, task) => {
+//         const { migrate } = await import("drizzle-orm/bun-sqlite/migrator");
+//         migrate(db, { migrationsFolder: "./drizzle" });
+//         task.title = "Database initialized";
+//       },
+//     },
+//     { title: "Initialize Google APIs", task: () => import("services/google-api") },
+//     {
+//       title: "Connect to Telegram",
+//       task: (_, task) =>
+//         task.newListr(
+//           [
+//             {
+//               title: "Connect GramJS",
+//               task: async (_, sub) => {
+//                 sub.title = await gramjsClient.connect();
+//               },
+//             },
+//             {
+//               title: "Pre-fetch chat info",
+//               task: async (_, sub) => {
+//                 sub.title = await gramjsClient.prefetchDefaultChat();
+//               },
+//             },
+//             {
+//               title: "Map people to Telegram",
+//               task: async (_, sub) => {
+//                 sub.title = await initPeopleMap();
+//               },
+//             },
+//           ],
+//           { concurrent: false },
+//         ),
+//     },
+//     {
+//       title: "Sync memories",
+//       task: async (_, task) => {
+//         task.title = await memories.sync();
+//       },
+//     },
+//     {
+//       title: "Sync skills",
+//       task: async (_, task) => {
+//         task.title = await skills.sync();
+//       },
+//     },
+//     {
+//       title: "Sync system prompt",
+//       task: async (_, task) => {
+//         task.title = await systemPrompt.sync();
+//       },
+//     },
+//   ],
+//   { concurrent: true, exitOnError: false },
+// ).run();
 
 // Notify about new version in production (send to private chat)
-if (env.TELEGRAM_SESSION_LOCAL === undefined) {
-  try {
-    const packageJson = await Bun.file("./package.json").json();
-    const version = packageJson.config?.version as string;
-    await bot.api.sendMessage(env.ALLOWED_USER_ID, `Bot updated to version ${version}`);
-    logger.info({ version }, "Version notification sent");
-  } catch (error) {
-    logger.warn(
-      { error: error instanceof Error ? error.message : String(error) },
-      "Failed to send version notification",
-    );
-  }
-}
+// if (env.TELEGRAM_SESSION_LOCAL === undefined) {
+//   try {
+//     const packageJson = await Bun.file("./package.json").json();
+//     const version = packageJson.config?.version as string;
+//     await bot.api.sendMessage(env.ALLOWED_USER_ID, `Bot updated to version ${version}`);
+//     logger.info({ version }, "Version notification sent");
+//   } catch (error) {
+//     logger.warn(
+//       { error: error instanceof Error ? error.message : String(error) },
+//       "Failed to send version notification",
+//     );
+//   }
+// }
 
 // Set up job queue with Telegram rendering
-const jobQueue = new JobQueue((job: Job) =>
-  new TelegramRenderer(job.telegramContext).render(
-    <JobProvider job={job}>
-      <Main />
-    </JobProvider>,
-  ),
-);
+// const jobQueue = new JobQueue((job: Job) =>
+//   new TelegramRenderer(job.telegramContext).render(
+//     <JobProvider job={job}>
+//       <Main />
+//     </JobProvider>,
+//   ),
+// );
 
 // Main message handler
-bot.on("message", async (ctx) => {
-  // Only allow messages from authorized user or allowed group that mentions the bot
-  if (ctx.chat?.type === "group" || ctx.chat?.type === "supergroup") {
-    if (ctx.chat?.id !== env.GROUP_CHAT_ID) return;
-    if (!isBotMentioned(ctx.message, botUsername)) return;
-  } else if (ctx.from?.id !== env.ALLOWED_USER_ID && ctx.from?.id !== env.SECONDARY_USER_ID) return;
+// bot.on("message", async (ctx) => {
+//   // Only allow messages from authorized user or allowed group that mentions the bot
+//   if (ctx.chat?.type === "group" || ctx.chat?.type === "supergroup") {
+//     if (ctx.chat?.id !== env.GROUP_CHAT_ID) return;
+//     if (!isBotMentioned(ctx.message, botUsername)) return;
+//   } else if (ctx.from?.id !== env.ALLOWED_USER_ID && ctx.from?.id !== env.SECONDARY_USER_ID) return;
 
-  // Immediately react with 👀 to acknowledge the message
-  await ctx.react("👀").catch((error) => {
-    logger.warn({ error: error instanceof Error ? error.message : String(error) }, "Failed to set initial reaction");
-  });
+//   // Immediately react with 👀 to acknowledge the message
+//   await ctx.react("👀").catch((error) => {
+//     logger.warn({ error: error instanceof Error ? error.message : String(error) }, "Failed to set initial reaction");
+//   });
 
-  let userMessage = ctx.message.text ?? ctx.message.caption;
+//   let userMessage = ctx.message.text ?? ctx.message.caption;
 
-  if (!userMessage && ctx.message.voice) {
-    const file = await ctx.api.getFile(ctx.message.voice.file_id);
-    const fileUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
-    const response = await fetch(fileUrl);
-    const buffer = Buffer.from(await response.arrayBuffer());
-    userMessage = await transcribeAudio(buffer, ctx.message.voice.file_unique_id);
-  }
+//   if (!userMessage && ctx.message.voice) {
+//     const file = await ctx.api.getFile(ctx.message.voice.file_id);
+//     const fileUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
+//     const response = await fetch(fileUrl);
+//     const buffer = Buffer.from(await response.arrayBuffer());
+//     userMessage = await transcribeAudio(buffer, ctx.message.voice.file_unique_id);
+//   }
 
-  if (!userMessage && (ctx.message.photo || ctx.message.document)) userMessage = "(attachment)";
+//   if (!userMessage && (ctx.message.photo || ctx.message.document)) userMessage = "(attachment)";
 
-  logger.info({ userMessage }, "Received message");
+//   logger.info({ userMessage }, "Received message");
 
-  if (!userMessage) return;
+//   if (!userMessage) return;
 
-  const chatType = ctx.chat.type === "private" ? "private" : "group";
-  const chatName =
-    ctx.chat.type === "private"
-      ? `${ctx.chat.first_name ?? ""} ${ctx.chat.last_name ?? ""}`.trim()
-      : "title" in ctx.chat
-        ? ctx.chat.title
-        : "Unknown";
+//   const chatType = ctx.chat.type === "private" ? "private" : "group";
+//   const chatName =
+//     ctx.chat.type === "private"
+//       ? `${ctx.chat.first_name ?? ""} ${ctx.chat.last_name ?? ""}`.trim()
+//       : "title" in ctx.chat
+//         ? ctx.chat.title
+//         : "Unknown";
 
-  jobQueue.enqueue(new Job(ctx, ctx.message.message_id, chatType, chatName, botChatId, botUsername, botName));
-});
+//   jobQueue.enqueue(new Job(ctx, ctx.message.message_id, chatType, chatName, botChatId, botUsername, botName));
+// });
 
-// Setup webhook handler if in webhook mode
-const handleWebhook = env.BOT_MODE === "webhook" ? webhookCallback(bot, "std/http") : null;
+// // Setup webhook handler if in webhook mode
+// const handleWebhook = env.BOT_MODE === "webhook" ? webhookCallback(bot, "std/http") : null;
 
-if (env.BOT_MODE === "webhook") {
-  await bot.api.setWebhook(`${env.BASE_URL}/webhook`);
-  logger.info({ webhookUrl: `${env.BASE_URL}/webhook` }, "Webhook configured");
-} else {
-  await bot.api.deleteWebhook();
-  bot.start();
-  logger.info("Bot started in polling mode");
-}
+// if (env.BOT_MODE === "webhook") {
+//   await bot.api.setWebhook(`${env.BASE_URL}/webhook`);
+//   logger.info({ webhookUrl: `${env.BASE_URL}/webhook` }, "Webhook configured");
+// } else {
+//   await bot.api.deleteWebhook();
+//   bot.start();
+//   logger.info("Bot started in polling mode");
+// }
 
-// Start HTTP server with Hono API + bot webhooks
-{
-  const { Hono } = await import("hono");
-  const { api } = await import("./api/app");
+// Telegram webhook
+// if (handleWebhook) app.post("/telegram", async (c) => await handleWebhook(c.req.raw));
 
-  const app = new Hono();
-
-  // Mount the dashboard/shared API
-  app.route("/", api);
-
-  // Telegram webhook
-  if (handleWebhook) app.post("/telegram", async (c) => await handleWebhook(c.req.raw));
-
-  // Notion webhook
-  app.post("/notion-webhook", async (c) => await handleNotionWebhook(bot, c.req.raw));
-
-  Bun.serve({
-    port: env.PORT,
-    fetch: app.fetch,
-  });
-
-  logger.info({ port: env.PORT }, "Server started with Hono API");
-}
-
-// Graceful shutdown
-async function shutdown(signal: string): Promise<void> {
-  logger.info({ signal }, "Shutting down...");
-  try {
-    await gramjsClient.disconnect();
-  } catch (error) {
-    logger.error({ error: error instanceof Error ? error.message : String(error) }, "Error during shutdown");
-  } finally {
-    process.exit(0);
-  }
-}
-
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
+// Notion webhook
+// app.post("/notion-webhook", async (c) => await handleNotionWebhook(bot, c.req.raw));

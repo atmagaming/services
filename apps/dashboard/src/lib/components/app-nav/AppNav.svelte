@@ -3,8 +3,8 @@ import { goto } from "$app/navigation";
 import { page } from "$app/state";
 import { Avatar, AvatarFallback, AvatarImage } from "$components/avatar";
 import { Button } from "$components/button";
+import type { SessionUser } from "$lib/api";
 import { logout } from "$lib/auth.svelte";
-import type { SessionUser } from "$lib/types";
 
 const { user = null }: { user: SessionUser | null } = $props();
 

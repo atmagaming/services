@@ -6,13 +6,20 @@ const execAsync = promisify(exec);
 const port = process.argv[2] ?? "3000";
 
 try {
-  // Try to kill process on the specified port
-  const { stdout } = await execAsync(`lsof -ti:${port}`);
-  const pid = stdout.trim();
+  const { stdout } = await execAsync(`lsof -nP -iTCP:${port} -sTCP:LISTEN`);
+  const pids = [
+    ...new Set(
+      stdout
+        .split("\n")
+        .slice(1)
+        .map((line) => line.trim().split(/\s+/)[1])
+        .filter(Boolean),
+    ),
+  ];
 
-  if (pid) {
-    await execAsync(`kill -9 ${pid}`);
-    console.log(`✓ Killed process ${pid} on port ${port}`);
+  if (pids.length > 0) {
+    await execAsync(`kill -9 ${pids.join(" ")}`);
+    console.log(`✓ Killed process(es) ${pids.join(", ")} on port ${port}`);
   } else {
     console.log(`✓ Port ${port} is already free`);
   }

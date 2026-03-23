@@ -1,6 +1,6 @@
-import { meshyClient } from "services/meshy/meshy";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
+import { meshyClient } from "../meshy";
 
 export const generate3DFromImageTool = defineTool(
   "Generate3DFromImage",

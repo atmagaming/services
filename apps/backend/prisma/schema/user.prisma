@@ -1,14 +1,15 @@
 model User {
-  id                   String   @id @default(cuid())
-  email                String   @unique
+  id                   String               @id @default(cuid())
+  email                String               @unique
   name                 String?
   passwordHash         String?
   image                String?
-  canViewTransactions  Boolean  @default(false)
-  canViewRevenueShares Boolean  @default(false)
-  canViewPersonalData  Boolean  @default(false)
-  canEditPeople        Boolean  @default(false)
-  passwordResetTokens PasswordResetToken[]
+  canViewTransactions  Boolean              @default(false)
+  canViewRevenueShares Boolean              @default(false)
+  canViewPersonalData  Boolean              @default(false)
+  canEditPeople        Boolean              @default(false)
+  canEditTransactions  Boolean              @default(false)
+  passwordResetTokens  PasswordResetToken[]
 }
 
 model PasswordResetToken {

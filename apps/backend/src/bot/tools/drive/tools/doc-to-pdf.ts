@@ -1,4 +1,4 @@
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { saveTempFile } from "utils/files";
 import { z } from "zod";
@@ -11,11 +11,9 @@ export const docToPDFTool = defineTool(
     filename: z.string().nullable().describe("Filename, or null (defaults to document name)"),
   }),
   async ({ documentId, filename }) => {
-    const [file, buffer] = await Promise.all([google.drive.get(documentId), google.docs.exportPdf(documentId)]);
-
-    const fileName = filename ?? file?.name ?? "download";
+    const [file, buffer] = await Promise.all([google.drive.file(documentId), google.docs.exportPdf(documentId)]);
+    const fileName = filename ?? file.name;
     const tempPath = await saveTempFile(buffer, "pdf", fileName);
-
     return tempPath;
   },
 );

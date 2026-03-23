@@ -1,4 +1,4 @@
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { saveTempFile } from "utils/files";
 import { z } from "zod";
@@ -11,11 +11,11 @@ export const downloadFileTool = defineTool(
     filename: z.string().nullable().describe("Filename, or null (defaults to document name)"),
   }),
   async ({ fileId, filename }) => {
-    const file = await google.drive.get(fileId);
-    const fileName = filename ?? file?.name ?? "download";
-    const mimeType = file?.mimeType ?? "application/octet-stream";
+    const file = await google.drive.file(fileId);
+    const fileName = filename ?? file.name;
+    const mimeType = file.mimeType;
 
-    const fileBuffer = await google.drive.download(fileId);
+    const fileBuffer = await file.download();
     const extension = getExtension(fileName, mimeType);
     const tempPath = await saveTempFile(fileBuffer, extension, fileName);
 

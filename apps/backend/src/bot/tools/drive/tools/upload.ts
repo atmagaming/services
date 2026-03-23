@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { Context } from "grammy";
 import { logger } from "logger";
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { detectMimeType } from "utils/files";
 import { z } from "zod";
@@ -47,7 +47,8 @@ export const uploadFileTool = defineTool(
       throw new Error("No file source provided");
     }
 
-    const uploadedFile = await google.drive.upload(file_name ?? inferredFileName, buffer, mimeType, folder_id);
+    const folder = await google.drive.folder(folder_id);
+    const uploadedFile = await folder.upload(file_name ?? inferredFileName, buffer, mimeType);
 
     return uploadedFile.toXML();
   },

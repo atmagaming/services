@@ -1,4 +1,4 @@
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
 
@@ -14,7 +14,8 @@ export const copyFile = defineTool(
       .describe("Folder ID to place the copy in, or null if it should be placed in the root"),
   }),
   async ({ fileId, name, targetFolderId }) => {
-    const file = await google.drive.copy(fileId, name, targetFolderId ?? undefined);
-    return file.toXML();
+    const file = await google.drive.file(fileId);
+    const cloned = await file.clone(name, targetFolderId ?? undefined);
+    return cloned.toXML();
   },
 );

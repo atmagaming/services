@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Check, Copy } from "lucide-svelte";
+import Check from "@lucide/svelte/icons/check";
+import Copy from "@lucide/svelte/icons/copy";
 
 interface Props {
   value: string;
@@ -20,7 +21,10 @@ async function copy() {
 
 <button
   type="button"
-  onclick={(e) => { e.stopPropagation(); copy(); }}
+  onclick={(e) => {
+    e.stopPropagation();
+    copy();
+  }}
   class="shrink-0 rounded p-0.5 hover:bg-muted {className}"
   aria-label="Copy"
 >

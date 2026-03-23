@@ -21,24 +21,20 @@ async function handleSubmit() {
 
   loading = true;
   try {
-    const { apiFetch } = await import("$lib/api");
-    const res = await apiFetch("/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify({ token, password }),
-    });
-    if (!res.ok) {
-      const responsePayload = await res.json().catch(() => ({}));
-      error = responsePayload?.message ?? "Something went wrong. Please try again.";
-      return;
-    }
+    const { api: client } = await import("$lib/api");
+    await client.auth.resetPassword.$post({ token, password });
     success = true;
+  } catch (e) {
+    error = (e as Error).message ?? "Something went wrong. Please try again.";
   } finally {
     loading = false;
   }
 }
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-linear-to-br from-indigo-50 via-background to-purple-50/30 px-4">
+<div
+  class="flex min-h-screen items-center justify-center bg-linear-to-br from-indigo-50 via-background to-purple-50/30 px-4"
+>
   {#if !token}
     <p class="text-muted-foreground">Invalid reset link.</p>
   {:else if success}
@@ -57,13 +53,23 @@ async function handleSubmit() {
       </CardHeader>
       <CardContent class="space-y-4">
         {#if error}
-          <p class="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p>
+          <p class="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
         {/if}
 
-        <form class="space-y-3" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <form
+          class="space-y-3"
+          onsubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           <Input bind:value={password} type="password" placeholder="New password" required minlength={8} />
           <Input bind:value={confirmPassword} type="password" placeholder="Confirm password" required minlength={8} />
-          <Button type="submit" class="w-full" disabled={loading}>{loading ? "Please wait..." : "Reset Password"}</Button>
+          <Button type="submit" class="w-full" disabled={loading}
+            >{loading ? "Please wait..." : "Reset Password"}</Button
+          >
         </form>
       </CardContent>
     </Card>

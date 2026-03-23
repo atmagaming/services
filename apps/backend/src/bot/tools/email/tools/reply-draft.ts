@@ -1,6 +1,6 @@
-import { emailAccounts } from "services/email";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
+import { emailAccounts } from "../email-accounts";
 
 export const replyDraftTool = defineTool(
   "ReplyDraft",

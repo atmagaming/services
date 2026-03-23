@@ -3,21 +3,14 @@
 ```
 atma/
   apps/
-    backend/      # Hono API + Telegram Bot (Render, Docker)
+    backend/      # Nitro API + Telegram Bot (Render, Docker)
     dashboard/    # Svelte SPA (Vercel, adapter-static)
-    web/          # Next.js static marketing site (Vercel)
-  packages/
-    google-api/   # Shared Google Drive/Docs/Calendar/OAuth
-    signing/      # Shared DigiSigner + PDF signature box extraction
-    notion/       # Shared Notion API wrapper
-    types/        # Shared Person/Role/Status types
 ```
 
 ## Architecture
 
-- **Backend** (`api.atmagaming.com`): Hono server on Bun, handles all API routes + Telegram bot
+- **Backend** (`api.atmagaming.com`): Nitro server on Bun (`preset: "bun"`), file-based routing under `src/api/routes/`, handlers use h3 via `handler()` utility in `src/api/utils/handler.ts`
 - **Dashboard** (`dashboard.atmagaming.com`): SvelteKit + Svelte 5 SPA with adapter-static, fetches from API
-- **Web** (`atmagaming.com`): Next.js static marketing site
 
 ## Auth
 
@@ -56,7 +49,9 @@ class Example {
 ## @elumixor Packages
 
 ### `@elumixor/di`
+
 Singleton DI container. Classes as tokens, no decorators.
+
 ```typescript
 @di.injectable class MyService { ... }
 new MyService(); // registers singleton
@@ -65,7 +60,9 @@ di.inject(MyService, { optional: true }); // undefined if not registered
 ```
 
 ### `@elumixor/event-emitter`
+
 Type-safe event emitter. Use instead of callbacks.
+
 ```typescript
 readonly clicked = new EventEmitter();
 readonly changed = new EventEmitter<number>();
@@ -76,9 +73,11 @@ const value = await emitter.nextEvent;
 ```
 
 ### `@elumixor/extensions`
+
 `import "@elumixor/extensions";` — adds `.first`, `.last`, `.isEmpty`, `.shuffle()`, `.pick()`, `Array.range()`, `.capitalize()`.
 
 ### `@elumixor/frontils`
+
 `all()` (typed Promise.all), `assert()`, `delay(seconds)`, `random`, `nonNull()`, `zip()`, `DefaultMap`.
 
 ## Database (Turso/libSQL)
@@ -99,3 +98,7 @@ const value = await emitter.nextEvent;
 ## Security
 
 - Never commit secrets or API keys. Use `.env.local` with placeholders; add to `.gitignore`.
+
+# Updating this file CLAUDE.md
+
+Whenever the codebase changes from what is described in this document, update the relevant sections here to reflect the current state of the code. This document should always be an accurate reference for how the code is structured and how to work with it.

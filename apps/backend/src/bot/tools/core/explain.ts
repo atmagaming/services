@@ -1,5 +1,5 @@
 import { upsertMessageExtra } from "db/message-meta";
-import { geminiClient } from "services/gemini/gemini";
+import { geminiClient } from "services/gemini";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
 

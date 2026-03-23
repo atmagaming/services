@@ -6,8 +6,8 @@ let { ref = $bindable(null), class: className, ...restProps }: CommandPrimitive.
 </script>
 
 <CommandPrimitive.Empty
-	bind:ref
-	data-slot="command-empty"
-	class={cn("py-6 text-center text-sm", className)}
-	{...restProps}
+  bind:ref
+  data-slot="command-empty"
+  class={cn("py-6 text-center text-sm", className)}
+  {...restProps}
 />

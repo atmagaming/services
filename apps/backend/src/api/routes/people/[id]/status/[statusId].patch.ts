@@ -6,8 +6,8 @@ import { z } from "zod";
 export default handler(
   {
     body: {
-      status: z.enum(Object.values(PersonStatus)).optional(),
-      date: z.string().optional(),
+      status: z.enum(PersonStatus).optional(),
+      date: z.coerce.date().optional(),
     },
   },
   async ({ user, body, router: { statusId } }) => {
@@ -17,7 +17,7 @@ export default handler(
       where: { id: statusId },
       data: {
         status: body.status,
-        date: body.date !== undefined ? new Date(body.date) : undefined,
+        date: body.date,
       },
     });
   },

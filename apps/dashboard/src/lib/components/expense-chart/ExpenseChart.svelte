@@ -1,8 +1,8 @@
 <script lang="ts">
 import { Button } from "$components/button";
 import StackedAreaChart from "$components/stacked-area-chart";
+import type { ChartSeries, MonthlyExpense, ProjectionMonth } from "$lib/api";
 import { getLastConfirmedMonth, getMonthRange } from "$lib/date";
-import type { ChartSeries, MonthlyExpense, ProjectionMonth } from "$lib/types";
 
 const {
   historical = [],
@@ -108,16 +108,8 @@ const series = $derived([
 ] as ChartSeries[]);
 </script>
 
-<StackedAreaChart
-  title="Expenses (USD)"
-  {months}
-  {series}
-  lastHistMonth={lastConfirmed}
-  showTotalLabels={true}
->
+<StackedAreaChart title="Expenses (USD)" {months} {series} lastHistMonth={lastConfirmed} showTotalLabels={true}>
   {#snippet actions()}
-    <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>
-      Cumulative
-    </Button>
+    <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>Cumulative</Button>
   {/snippet}
 </StackedAreaChart>

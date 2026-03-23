@@ -1,8 +1,7 @@
 import { handler } from "api/utils";
-import { env } from "env";
 import { createError, readMultipartFormData } from "h3";
 import { requirePermission } from "services/auth";
-import { google } from "services/google-api";
+import { ensurePersonalFolder } from "services/people";
 import { DocumentCategory, prisma } from "services/prisma";
 
 function isValidCategory(category: string): category is DocumentCategory {
@@ -25,12 +24,8 @@ export default handler(async ({ user, event, router: { id: personId } }) => {
 
   const filename = filePart.filename ?? name ?? "upload";
 
-  const { id: url } = await google.drive.upload(
-    filename,
-    filePart.data,
-    filePart.type ?? "application/octet-stream",
-    env.GOOGLE_DRIVE_DOCUMENTS_FOLDER,
-  );
+  const folder = await ensurePersonalFolder(personId);
+  const { id: url } = await folder.upload(filename, filePart.data, filePart.type ?? "application/octet-stream");
 
   const document = await prisma.personDocument.create({
     data: { personId, name: name ?? filename, url, category },

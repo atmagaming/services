@@ -41,36 +41,36 @@ function formatMonth(date: DateValue) {
 </script>
 
 {#snippet MonthSelect()}
-	<CalendarMonthSelect
-		{months}
-		{monthFormat}
-		value={month.month}
-		onchange={(e) => {
-			if (!placeholder) return;
-			const v = Number.parseInt(e.currentTarget.value);
-			const newPlaceholder = placeholder.set({ month: v });
-			placeholder = newPlaceholder.subtract({ months: monthIndex });
-		}}
-	/>
+  <CalendarMonthSelect
+    {months}
+    {monthFormat}
+    value={month.month}
+    onchange={(e) => {
+      if (!placeholder) return;
+      const v = Number.parseInt(e.currentTarget.value);
+      const newPlaceholder = placeholder.set({ month: v });
+      placeholder = newPlaceholder.subtract({ months: monthIndex });
+    }}
+  />
 {/snippet}
 
 {#snippet YearSelect()}
-	<CalendarYearSelect {years} {yearFormat} value={month.year} />
+  <CalendarYearSelect {years} {yearFormat} value={month.year} />
 {/snippet}
 
 {#if captionLayout === "dropdown"}
-	{@render MonthSelect()}
-	{@render YearSelect()}
+  {@render MonthSelect()}
+  {@render YearSelect()}
 {:else if captionLayout === "dropdown-months"}
-	{@render MonthSelect()}
-	{#if placeholder}
-		{formatYear(placeholder)}
-	{/if}
+  {@render MonthSelect()}
+  {#if placeholder}
+    {formatYear(placeholder)}
+  {/if}
 {:else if captionLayout === "dropdown-years"}
-	{#if placeholder}
-		{formatMonth(placeholder)}
-	{/if}
-	{@render YearSelect()}
+  {#if placeholder}
+    {formatMonth(placeholder)}
+  {/if}
+  {@render YearSelect()}
 {:else}
-	{formatMonth(month)} {formatYear(month)}
+  {formatMonth(month)} {formatYear(month)}
 {/if}

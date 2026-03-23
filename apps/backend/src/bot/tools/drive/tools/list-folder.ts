@@ -1,4 +1,4 @@
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
 
@@ -12,7 +12,9 @@ export const listFolderTool = defineTool(
       .describe("Folder ID to list contents of. If null, lists the contents of the root folder"),
   }),
   async ({ folderId }) => {
-    const files = folderId ? await google.drive.list(folderId) : await google.drive.rootFolder();
-    return files.map((f) => f.toXML()).join("\n");
+    const items = folderId
+      ? await (await google.drive.folder(folderId)).files()
+      : await google.drive.rootFolders();
+    return items.map((f) => f.toXML()).join("\n");
   },
 );

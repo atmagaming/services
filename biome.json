@@ -3,13 +3,13 @@
   "files": {
     "includes": [
       "apps/**",
-      "packages/**",
       "*.json",
       "*.ts",
       "!apps/backend/generated",
       "!apps/backend/drizzle",
       "!apps/dashboard/.svelte-kit",
       "!apps/dashboard/generated",
+      "!apps/dashboard/src/lib/generated",
       "!apps/dashboard/src/app.css"
     ],
     "ignoreUnknown": true

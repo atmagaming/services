@@ -1,1 +1,1 @@
-export { default } from "./PeopleTable.svelte";
+export { default } from "../../../routes/people/[[id]]/people-table/Table.svelte";

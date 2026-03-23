@@ -5,7 +5,7 @@ import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { onDestroy, onMount } from "svelte";
 import { browser } from "$app/environment";
-import type { ChartSeries } from "$lib/types";
+import type { ChartSeries } from "$lib/api";
 import "$lib/date-extensions";
 import type { Snippet } from "svelte";
 

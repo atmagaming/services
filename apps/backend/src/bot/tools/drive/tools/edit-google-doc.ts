@@ -1,5 +1,5 @@
 import type { docs_v1 } from "googleapis";
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
 

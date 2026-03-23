@@ -2,12 +2,11 @@
 import { Pencil, X } from "@lucide/svelte";
 import { tick } from "svelte";
 
-const {
+let {
   icon,
-  value,
+  value = $bindable(""),
   href = null,
   placeholder,
-  onSave = () => {},
   onRemove = null,
   readonly = false,
 }: {
@@ -15,7 +14,6 @@ const {
   value: string;
   href?: string | null;
   placeholder: string;
-  onSave?: (value: string) => void;
   onRemove?: (() => void) | null;
   readonly?: boolean;
 } = $props();
@@ -34,7 +32,7 @@ async function startEdit() {
 
 function commitEdit() {
   editing = false;
-  if (editValue !== value) onSave(editValue);
+  if (editValue !== value) value = editValue;
 }
 </script>
 
@@ -46,7 +44,9 @@ function commitEdit() {
       bind:value={editValue}
       class="flex-1 bg-transparent text-sm outline-none"
       onblur={commitEdit}
-      onkeydown={(e) => { if (e.key === "Enter" || e.key === "Escape") inputEl?.blur(); }}
+      onkeydown={(e) => {
+        if (e.key === "Enter" || e.key === "Escape") inputEl?.blur();
+      }}
     />
   {:else if value}
     {#if href}
@@ -69,7 +69,11 @@ function commitEdit() {
       </div>
     {/if}
   {:else if !readonly}
-    <button type="button" onclick={startEdit} class="flex-1 text-left text-sm text-muted-foreground hover:text-foreground">
+    <button
+      type="button"
+      onclick={startEdit}
+      class="flex-1 text-left text-sm text-muted-foreground hover:text-foreground"
+    >
       {placeholder}
     </button>
   {:else}

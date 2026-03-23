@@ -174,7 +174,9 @@ const teamAgg = $derived(aggregateRows(rows));
             ${Math.round(teamAgg.investedRate)}/hr
           </TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono"
+            >${teamAgg.monthlyAccrued.toLocaleString()}</TableCell
+          >
           <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
             ${teamAgg.monthlyTotal.toLocaleString()}
           </TableCell>
@@ -201,11 +203,15 @@ const teamAgg = $derived(aggregateRows(rows));
             ${Math.round(teamAgg.investedRate)}/hr
           </TableCell>
           <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono"
+            >${teamAgg.monthlyAccrued.toLocaleString()}</TableCell
+          >
           <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
             ${teamAgg.monthlyTotal.toLocaleString()}
           </TableCell>
-          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.currentInvestment.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono"
+            >${teamAgg.currentInvestment.toLocaleString()}</TableCell
+          >
           <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold text-primary">
             {teamAgg.currentShare.toFixed(1)}%
           </TableCell>

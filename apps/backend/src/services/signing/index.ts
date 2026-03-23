@@ -1,1 +1,1 @@
-export * from "./sign";
+export { cloneAndFillTemplate, sign, signGoogleDoc } from "./sign";

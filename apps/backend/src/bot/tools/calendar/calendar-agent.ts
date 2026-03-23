@@ -1,5 +1,5 @@
 import { models } from "models";
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { StreamingAgent } from "streaming-agent";
 import { createEventTool, deleteEventTool, listEventsTool, updateEventTool } from "./tools";
 

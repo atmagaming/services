@@ -1,6 +1,6 @@
-import { sendForSign } from "services/signer";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
+import { sendForSign } from "./signer";
 
 export const sendForSignTool = defineTool(
   "SendForSign",

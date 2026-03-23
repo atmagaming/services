@@ -1,20 +1,22 @@
 import { DigiSigner } from "@elumixor/digisigner";
 import { env } from "env";
-import { google } from "services/google-api";
+import { google } from "services/google";
+import { ensurePersonalFolder } from "services/people";
 import { type DocumentCategory, type IdType, prisma } from "services/prisma";
 import { formatDateLong } from "./date-formatter";
 import { SignatureBoxExtractor } from "./signature-box-extractor";
 
 const digiSigner = new DigiSigner(env.DIGISIGNER_API_KEY);
 
-export async function sign(
+export async function cloneAndFillTemplate(
   personId: string,
   category: DocumentCategory,
-): Promise<{ requestId: string; adminUrl: string; personUrl: string }> {
+  name?: string,
+): Promise<{ driveFileId: string; docName: string }> {
   const {
     firstName,
     lastName,
-    name,
+    name: personName,
     email,
     idType,
     idIssueDate,
@@ -23,19 +25,21 @@ export async function sign(
     schedule,
     roles,
     statusChanges,
-    hourlyRatePaid,
-    hourlyRateAccrued,
+    paidHourly,
+    accruedHourly,
   } = await prisma.person.findFirstOrThrow({
     where: { id: personId },
     include: { roles: { select: { name: true } }, statusChanges: { select: { status: true, date: true } } },
   });
 
   const templateId = category === "nda" ? env.GOOGLE_DRIVE_NDA_TEMPLATE_ID : env.GOOGLE_DRIVE_CONTRACT_TEMPLATE_ID;
+  const fullName = `${firstName} ${lastName}`.trim() || personName;
+  const docName = name ?? `${category.toUpperCase()} - ${fullName} - ${new Date().toISOString().slice(0, 10)}`;
+  const folder = await ensurePersonalFolder(personId);
 
-  const fullName = `${firstName} ${lastName}`.trim() || name;
-  const docName = `${category.toUpperCase()} - ${fullName} - ${new Date().toISOString().slice(0, 10)}`;
-
-  const { id: copiedDocId } = await google.drive.copy(templateId, docName, env.GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID);
+  const template = await google.drive.file(templateId);
+  const cloned = await template.clone(docName, folder);
+  const driveFileId = cloned.id;
 
   if (!idType || !idNumber || !idIssuingAuthority || !idIssueDate || !fullName || !email)
     throw new Error("Missing required identification information for signing");
@@ -47,9 +51,7 @@ export async function sign(
     residence_permit: "residence permit",
   } satisfies { [key in IdType]: string };
 
-  const idTypeStr = idTypeLabel[idType];
-  const issueDate = formatDateLong(idIssueDate);
-  const identification = `${idTypeStr} ${idNumber} issued on ${issueDate} by authority ${idIssuingAuthority}`;
+  const identification = `${idTypeLabel[idType]} ${idNumber} issued on ${formatDateLong(idIssueDate)} by authority ${idIssuingAuthority}`;
 
   const replacements: Record<string, string> = {
     "[NAME]": fullName,
@@ -63,21 +65,35 @@ export async function sign(
     if (roles.length === 0) throw new Error("Missing role for contract signing");
 
     const hoursPerWeek = schedule.split(",").reduce((total, part) => total + Number.parseInt(part, 10), 0);
-
-    // Start date is the date of the first status change with status "active"
     const startDate = statusChanges.find((sc) => sc.status === "working")?.date;
     if (!startDate) throw new Error("Missing active status change for contract signing");
 
     replacements["[ROLE]"] = roles[0].name;
     replacements["[HOURS_PER_SPRINT]"] = String(hoursPerWeek);
     replacements["[START_DATE]"] = formatDateLong(startDate);
-    replacements["[PAID_RATE]"] = hourlyRatePaid.toFixed(2);
-    replacements["[INVESTMENT_RATE]"] = hourlyRateAccrued.toFixed(2);
+    replacements["[PAID_RATE]"] = paidHourly.toFixed(2);
+    replacements["[INVESTMENT_RATE]"] = accruedHourly.toFixed(2);
   }
 
-  await google.docs.replaceText(copiedDocId, replacements);
-  const pdfBuffer = await google.docs.exportPdf(copiedDocId);
+  await google.docs.replaceText(driveFileId, replacements);
 
+  return { driveFileId, docName };
+}
+
+export async function signGoogleDoc(
+  personId: string,
+  driveFileId: string,
+  docName: string,
+): Promise<{ requestId: string; adminUrl: string; personUrl: string }> {
+  const { firstName, lastName, name, email } = await prisma.person.findFirstOrThrow({
+    where: { id: personId },
+    select: { firstName: true, lastName: true, name: true, email: true },
+  });
+
+  const fullName = `${firstName} ${lastName}`.trim() || name;
+  if (!email) throw new Error("Person email is required for signing");
+
+  const pdfBuffer = await google.docs.exportPdf(driveFileId);
   const extractor = new SignatureBoxExtractor(pdfBuffer);
   const lastPage = (await extractor.numPages) - 1;
 
@@ -118,4 +134,12 @@ export async function sign(
     adminUrl: adminSigner.sign_document_url,
     personUrl: personSigner.sign_document_url,
   };
+}
+
+export async function sign(
+  personId: string,
+  category: DocumentCategory,
+): Promise<{ requestId: string; adminUrl: string; personUrl: string }> {
+  const { driveFileId, docName } = await cloneAndFillTemplate(personId, category);
+  return signGoogleDoc(personId, driveFileId, docName);
 }

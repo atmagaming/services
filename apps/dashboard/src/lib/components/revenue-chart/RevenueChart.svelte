@@ -1,7 +1,7 @@
 <script lang="ts">
 import StackedAreaChart from "$components/stacked-area-chart";
+import type { ChartSeries, RevenueShare } from "$lib/api";
 import { CHART_COLORS } from "$lib/chart-colors";
-import type { ChartSeries, RevenueShare } from "$lib/types";
 
 const { data = [] }: { data?: RevenueShare[] } = $props();
 
@@ -52,9 +52,9 @@ const tooltipValueFormatter = (v: number) => `${v.toFixed(1)}%`;
   title="Revenue Share Over Time (%)"
   {months}
   {series}
-  lastHistMonth={lastHistMonth}
-  yAxisFormatter={yAxisFormatter}
-  tooltipValueFormatter={tooltipValueFormatter}
+  {lastHistMonth}
+  {yAxisFormatter}
+  {tooltipValueFormatter}
   yAxisMin={0}
   yAxisMax={100}
 />

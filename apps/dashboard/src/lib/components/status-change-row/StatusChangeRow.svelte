@@ -1,10 +1,10 @@
 <script lang="ts">
 import DatePicker from "$components/date-picker";
 import * as Select from "$components/select";
-import type { PersonStatus } from "$lib/types";
+import type { PersonStatus } from "$lib/api";
 
-const {
-  statusChange,
+let {
+  statusChange = $bindable(),
   onUpdate,
   onDelete,
 }: {
@@ -27,25 +27,33 @@ const STATUS_COLORS: Record<PersonStatus, string> = {
   inactive: "bg-gray-100 text-gray-500",
 };
 
-// svelte-ignore state_referenced_locally
-let localStatus = $state(statusChange.status);
-
-$effect(() => {
-  localStatus = statusChange.status;
-});
-
 function handleStatusChange(value: string) {
-  localStatus = value as PersonStatus;
+  statusChange = { ...statusChange, status: value as PersonStatus };
   onUpdate("status", value);
 }
+
+let dateValue = $state(statusChange.date.slice(0, 10));
+
+$effect(() => {
+  dateValue = statusChange.date.slice(0, 10);
+});
+
+$effect(() => {
+  if (dateValue !== statusChange.date.slice(0, 10)) {
+    statusChange = { ...statusChange, date: dateValue };
+    onUpdate("date", dateValue);
+  }
+});
 </script>
 
 <div class="group flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted/40">
-  <DatePicker value={statusChange.date} onchange={(v) => onUpdate("date", v)} />
-  <Select.Root type="single" value={localStatus} onValueChange={handleStatusChange}>
+  <DatePicker bind:value={dateValue} />
+  <Select.Root type="single" value={statusChange.status} onValueChange={handleStatusChange}>
     <Select.Trigger size="sm" class="flex-1 border-none shadow-none focus-visible:ring-0">
-      <span class={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[localStatus] ?? "bg-gray-100 text-gray-500"}`}>
-        {STATUS_LABELS[localStatus] ?? localStatus}
+      <span
+        class={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[statusChange.status] ?? "bg-gray-100 text-gray-500"}`}
+      >
+        {STATUS_LABELS[statusChange.status] ?? statusChange.status}
       </span>
     </Select.Trigger>
     <Select.Content>

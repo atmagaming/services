@@ -11,6 +11,7 @@ export interface SessionUser {
   canViewTransactions: boolean;
   canViewRevenueShares: boolean;
   canViewPersonalData: boolean;
+  canEditTransactions: boolean;
   canEditPeople: boolean;
 }
 
@@ -28,6 +29,7 @@ export async function createJWT(user: User) {
     canViewRevenueShares: isSuperAdmin || user.canViewRevenueShares,
     canViewPersonalData: isSuperAdmin || user.canViewPersonalData,
     canEditPeople: isSuperAdmin || user.canEditPeople,
+    canEditTransactions: isSuperAdmin || user.canEditTransactions,
   } satisfies SessionUser;
 
   const now = Date.now();
@@ -60,7 +62,7 @@ export function requireAuth(user: SessionUser | null): asserts user is SessionUs
 
 export function requirePermission(
   user: SessionUser | null,
-  key: "canEditPeople" | "canViewTransactions" | "canViewRevenueShares" | "canViewPersonalData",
+  key: "canEditPeople" | "canViewTransactions" | "canViewRevenueShares" | "canViewPersonalData" | "canEditTransactions",
 ): asserts user is SessionUser {
   requireAuth(user);
   if (!user?.[key]) throw createError({ statusCode: 403, statusMessage: "Forbidden" });

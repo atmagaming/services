@@ -1,4 +1,4 @@
-import type { H3Event } from "h3";
+import type { EventHandler, EventHandlerRequest, H3Event } from "h3";
 import { defineEventHandler, getRouterParam, getValidatedQuery, readValidatedBody } from "h3";
 import type { SessionUser } from "services/auth";
 import { type ZodType, z } from "zod";
@@ -17,11 +17,11 @@ type BaseContext = { event: H3Event; user: SessionUser | null; router: Record<st
 const routerProxy = (event: H3Event) =>
   new Proxy({} as Record<string, string>, { get: (_, key: string) => getRouterParam(event, key) });
 
-export function handler<S extends Schemas>(
+export function handler<S extends Schemas, R>(
   schemas: S,
-  fn: (context: Inferred<S> & BaseContext) => unknown,
-): ReturnType<typeof defineEventHandler>;
-export function handler(fn: (context: BaseContext) => unknown): ReturnType<typeof defineEventHandler>;
+  fn: (context: Inferred<S> & BaseContext) => R,
+): EventHandler<EventHandlerRequest, R>;
+export function handler<R>(fn: (context: BaseContext) => R): EventHandler<EventHandlerRequest, R>;
 export function handler<S extends Schemas>(
   schemasOrFn: S | ((context: BaseContext) => unknown),
   fn?: (context: Inferred<S> & BaseContext) => unknown,

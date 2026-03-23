@@ -5,9 +5,9 @@ import { sign } from "services/signing";
 import { z } from "zod";
 
 export default handler(
-  { body: { documentCategory: z.enum(Object.values(DocumentCategory)) } },
-  async ({ user, body: { documentCategory }, router: { id } }) => {
+  { body: { documentCategory: z.enum(DocumentCategory) } },
+  ({ user, body: { documentCategory }, router: { id } }) => {
     requirePermission(user, "canEditPeople");
-    await sign(id, documentCategory);
+    return sign(id, documentCategory);
   },
 );

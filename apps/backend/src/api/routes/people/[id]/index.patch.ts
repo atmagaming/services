@@ -1,5 +1,6 @@
 import { handler } from "api/utils";
 import { requirePermission } from "services/auth";
+import { google } from "services/google";
 import { notion } from "services/notion";
 import { IdType, prisma } from "services/prisma";
 import { z } from "zod";
@@ -13,16 +14,16 @@ export default handler(
       image: z.string().nullable().optional(),
       identification: z
         .object({
-          type: z.enum(Object.values(IdType)).nullable(),
+          type: z.enum(IdType).nullable(),
           number: z.string().nullable(),
           issueDate: z.string().nullable(),
           issuingAuthority: z.string().nullable(),
         })
         .partial()
         .optional(),
-      schedule: z.string().nullable().optional(),
-      hourlyRatePaid: z.number().nullable().optional(),
-      hourlyRateAccrued: z.number().nullable().optional(),
+      schedule: z.string().regex(/^(\d+,){6}\d+$/).optional(),
+      paidHourly: z.number().optional(),
+      accruedHourly: z.number().optional(),
       email: z.string().nullable().optional(),
       telegram: z.string().nullable().optional(),
       discord: z.string().nullable().optional(),
@@ -34,7 +35,7 @@ export default handler(
         .optional(),
     },
   },
-  async ({ user, body, router: { id } }) => {
+  async ({ user, body: { roles, identification, ...body }, router: { id } }) => {
     requirePermission(user, "canEditPeople");
 
     // In notion only update name, roles, icon
@@ -42,6 +43,7 @@ export default handler(
       where: { id },
       data: {
         name: body.name,
+        role: roles?.map(r => r.id)
       },
       $icon: body.image,
     });
@@ -50,26 +52,31 @@ export default handler(
     const prismaUpdate = prisma.person.update({
       where: { id },
       data: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        image: body.image,
-        idType: body.identification?.type,
-        idNumber: body.identification?.number,
-        idIssueDate: body.identification?.issueDate,
-        idIssuingAuthority: body.identification?.issuingAuthority,
-        schedule: body.schedule,
-        hourlyRatePaid: body.hourlyRatePaid ?? 0,
-        hourlyRateAccrued: body.hourlyRateAccrued ?? 0,
-        email: body.email,
-        telegram: body.telegram,
-        discord: body.discord,
-        linkedin: body.linkedin,
-        description: body.description,
+        ...body,
+        ...(identification && {
+          idType: identification.type,
+          idNumber: identification.number,
+          idIssueDate: identification.issueDate ? new Date(identification.issueDate) : undefined,
+          idIssuingAuthority: identification.issuingAuthority,
+        }),
         roles: {
-          set: body.roles?.map((r) => ({ id: r.id })) ?? [],
+          set: roles?.map((r) => ({ id: r.id })) ?? [],
         },
       },
     });
+
+    // If name changed and person has a Drive folder, rename it in parallel (non-blocking)
+    if (body.name) {
+      prisma.person
+        .findUnique({ where: { id }, select: { driveFolderId: true } })
+        .then(async (p) => {
+          if (p?.driveFolderId) {
+            const folder = await google.drive.folder(p.driveFolderId);
+            await folder.rename(body.name!);
+          }
+        })
+        .catch((e: Error) => console.error(`Failed to rename Drive folder for person ${id}: ${e.message}`));
+    }
 
     // Wait for both updates to finish
     await Promise.all([notionUpdate, prismaUpdate]);

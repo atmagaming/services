@@ -12,28 +12,30 @@ enum DocumentCategory {
 }
 
 model Person {
-  id                 String  @id
+  id                 String    @id
   name               String
   image              String?
   firstName          String?
   lastName           String?
   idType             IdType?
   idNumber           String?
-  idIssueDate        String?
+  idIssueDate        DateTime?
   idIssuingAuthority String?
-  schedule           String  @default("4,4,4,4,4,0,0")
-  hourlyRatePaid     Float   @default(0)
-  hourlyRateAccrued  Float   @default(0)
+  schedule           String    @default("4,4,4,4,4,0,0")
+  paidHourly         Float     @default(0)
+  accruedHourly      Float     @default(0)
   email              String?
   telegram           String?
   discord            String?
   linkedin           String?
   description        String?
+  driveFolderId      String?
 
-  statusChanges PersonStatusChange[]
-  transactions  Transaction[]
-  roles         Role[]
-  documents     PersonDocument[]
+  statusChanges     PersonStatusChange[]
+  transactions      Transaction[]
+  roles             Role[]
+  documents         PersonDocument[]
+  documentInstances PersonDocumentInstance[]
 }
 
 enum PersonStatus {
@@ -60,4 +62,27 @@ model PersonDocument {
   category DocumentCategory
 
   person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model PersonDocumentInstance {
+  id           String           @id @default(cuid())
+  personId     String
+  templateType DocumentCategory
+  name         String
+  driveFileId  String
+  createdAt    DateTime         @default(now())
+
+  person     Person          @relation(fields: [personId], references: [id], onDelete: Cascade)
+  signedDocs SignedDocument[]
+}
+
+model SignedDocument {
+  id         String   @id @default(cuid())
+  instanceId String
+  requestId  String
+  adminUrl   String
+  personUrl  String
+  createdAt  DateTime @default(now())
+
+  instance PersonDocumentInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
 }

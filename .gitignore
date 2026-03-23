@@ -1,16 +1,52 @@
 node_modules/
 dist/
-.env
-.env.local
-.svelte-kit/
-build/
 out/
+build/
+*.tgz
+
+# env
+.env
+.env.*
+
+# framework output
+.svelte-kit/
 .next/
-logs/
-cache/
-*.db
-*.db-journal
-.playwright-mcp/
 .nitro/
 .output/
-dev.db
+.vercel/
+generated/
+
+# logs & cache
+logs/
+cache/
+*.log
+.cache/
+.eslintcache
+
+# database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# test
+coverage/
+*.lcov
+test-output/
+
+# typescript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# tools
+.playwright-mcp/
+.cli_history
+.mcp.json
+.claude/

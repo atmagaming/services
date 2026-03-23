@@ -16,10 +16,7 @@ const isAuthPage = $derived(page.url.pathname === "/login" || page.url.pathname 
 <svelte:head>
   <title>Atma Dashboard</title>
   <meta name="description" content="Dashboard for Atma Gaming" />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-  />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
 </svelte:head>
 
 {#if isAuthPage}

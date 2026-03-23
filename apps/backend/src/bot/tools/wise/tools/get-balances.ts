@@ -1,6 +1,6 @@
-import { wise } from "services/wise";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
+import { wise } from "../wise";
 
 export const getBalancesTool = defineTool(
   "GetWiseBalances",

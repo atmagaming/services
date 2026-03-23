@@ -8,7 +8,7 @@ const config = {
       fallback: "index.html",
     }),
     alias: {
-      "$components": "src/lib/components",
+      $components: "src/lib/components",
     },
   },
 };

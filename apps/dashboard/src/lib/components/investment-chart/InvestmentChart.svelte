@@ -1,8 +1,8 @@
 <script lang="ts">
 import { Button } from "$components/button";
 import StackedAreaChart from "$components/stacked-area-chart";
+import type { ChartSeries, InvestmentPoint } from "$lib/api";
 import { CHART_COLORS } from "$lib/chart-colors";
-import type { ChartSeries, InvestmentPoint } from "$lib/types";
 
 const { data = [] }: { data?: InvestmentPoint[] } = $props();
 
@@ -69,10 +69,8 @@ const series = $derived(
 );
 </script>
 
-<StackedAreaChart title="Investments Over Time (USD)" {months} {series} lastHistMonth={lastHistMonth}>
+<StackedAreaChart title="Investments Over Time (USD)" {months} {series} {lastHistMonth}>
   {#snippet actions()}
-    <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>
-      Cumulative
-    </Button>
+    <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>Cumulative</Button>
   {/snippet}
 </StackedAreaChart>

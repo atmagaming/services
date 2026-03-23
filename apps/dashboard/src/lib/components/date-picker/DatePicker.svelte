@@ -8,21 +8,19 @@ import { Input } from "$components/input";
 import * as Popover from "$components/popover";
 import { cn } from "$lib/utils";
 
-const {
-  value,
-  onchange = () => {},
+let {
+  value = $bindable(""),
   placeholder = "Pick a date",
   class: className = "",
 }: {
   value: string;
-  onchange?: (value: string) => void;
   placeholder?: string;
   class?: string;
 } = $props();
 
 let open = $state(false);
 
-const calendarValue = $derived(value ? parseDate(value) : undefined);
+const calendarValue = $derived(value ? parseDate(value.slice(0, 10)) : undefined);
 
 function toDisplayValue(v: typeof calendarValue) {
   return v
@@ -34,7 +32,7 @@ function toDisplayValue(v: typeof calendarValue) {
     : "";
 }
 
-let inputValue = $state(untrack(() => (value ? toDisplayValue(parseDate(value)) : "")));
+let inputValue = $state(untrack(() => (value ? toDisplayValue(parseDate(value.slice(0, 10))) : "")));
 
 $effect(() => {
   inputValue = toDisplayValue(calendarValue);
@@ -44,12 +42,12 @@ function handleInput(raw: string) {
   inputValue = raw;
   const parsed = new Date(raw);
   if (!Number.isNaN(parsed.getTime()))
-    onchange(new CalendarDate(parsed.getFullYear(), parsed.getMonth() + 1, parsed.getDate()).toString());
+    value = new CalendarDate(parsed.getFullYear(), parsed.getMonth() + 1, parsed.getDate()).toString();
 }
 
 function handleSelect(date: DateValue | undefined) {
   if (!date) return;
-  onchange(date.toString());
+  value = date.toString();
   open = false;
 }
 </script>
@@ -60,7 +58,12 @@ function handleSelect(date: DateValue | undefined) {
     oninput={(e) => handleInput((e.target as HTMLInputElement).value)}
     {placeholder}
     class="pe-9 bg-background"
-    onkeydown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); open = true; } }}
+    onkeydown={(e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        open = true;
+      }
+    }}
   />
   <Popover.Root bind:open>
     <Popover.Trigger>

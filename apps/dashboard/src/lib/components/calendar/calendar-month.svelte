@@ -11,5 +11,5 @@ let {
 </script>
 
 <div {...restProps} bind:this={ref} class={cn("flex flex-col", className)}>
-	{@render children?.()}
+  {@render children?.()}
 </div>

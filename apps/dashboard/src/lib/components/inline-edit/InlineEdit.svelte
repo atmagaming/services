@@ -45,7 +45,9 @@ function stopEdit() {
     {placeholder}
     class="field-sizing-content bg-transparent outline-none {className}"
     onblur={stopEdit}
-    onkeydown={(e) => { if (e.key === "Enter" || e.key === "Escape") inputEl?.blur(); }}
+    onkeydown={(e) => {
+      if (e.key === "Enter" || e.key === "Escape") inputEl?.blur();
+    }}
   />
 {:else}
   <button

@@ -1,32 +1,25 @@
 <script lang="ts">
 import { onMount } from "svelte";
-import TransactionsTable from "$components/transactions-table";
-import { apiJson } from "$lib/api";
-import type { Transaction } from "$lib/types";
+import { api, type Transaction } from "$lib/api";
+import TransactionsTable from "./TransactionsTable.svelte";
 
-interface TransactionsData {
-  transactions: Transaction[];
-  highlightPersonIds: string[];
-  maskedPersonIds: string[];
-}
-
-let payload = $state<TransactionsData | null>(null);
+let transactions = $state<Transaction[] | null>(null);
 
 onMount(async () => {
-  payload = await apiJson<TransactionsData>("/finances/transactions");
+  try {
+    transactions = (await api.transactions.$get()) as Transaction[];
+  } catch {
+    transactions = [];
+  }
 });
 </script>
 
-{#if payload}
+{#if transactions}
   <div class="space-y-6">
     <div>
       <h1 class="text-2xl font-bold text-foreground">Transactions</h1>
       <p class="mt-1 text-sm text-muted-foreground">Browse and filter all recorded transactions.</p>
     </div>
-    <TransactionsTable
-      transactions={payload.transactions}
-      highlightPersonIds={payload.highlightPersonIds}
-      maskedPersonIds={payload.maskedPersonIds}
-    />
+    <TransactionsTable {transactions} highlightPersonIds={[]} maskedPersonIds={[]} />
   </div>
 {/if}

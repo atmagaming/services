@@ -1,4 +1,4 @@
-import { google } from "services/google-api";
+import { google } from "services/google";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
 
@@ -10,7 +10,8 @@ export const renameTool = defineTool(
     newName: z.string().describe("The new name for the file or folder"),
   }),
   async ({ fileId, newName }) => {
-    const renamed = await google.drive.rename(fileId, newName);
-    return renamed.toXML();
+    const file = await google.drive.file(fileId);
+    await file.rename(newName);
+    return `Renamed "${file.name}" to "${newName}"`;
   },
 );

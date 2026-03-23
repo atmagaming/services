@@ -15,7 +15,14 @@ export function currentStatus(statusChanges: PersonStatusChange[]): PersonStatus
 // Get all people, with more details if the user has permission to view personal data
 export default handler({}, async ({ user }) => {
   if (user?.canViewPersonalData) {
-    const people = await prisma.person.findMany({ include: { statusChanges: true, documents: true, roles: true } });
+    const people = await prisma.person.findMany({
+      include: {
+        statusChanges: true,
+        documents: true,
+        roles: true,
+        documentInstances: { include: { signedDocs: true } },
+      },
+    });
 
     // Add currentStatus
     return people.map(({ statusChanges, ...rest }) => ({

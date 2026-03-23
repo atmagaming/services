@@ -45,7 +45,7 @@ Date.prototype.add = function (this: Date, value: number, kind: "day" | "month" 
 };
 
 Date.fromIso = (iso: string) => {
-  const [year, month, day] = iso.split("-").map(Number);
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
   return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
 };
 

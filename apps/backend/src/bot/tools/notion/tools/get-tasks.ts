@@ -1,6 +1,5 @@
 import { env } from "env";
-import { notion } from "services/notion";
-import { buildTaskFilter } from "services/notion/notion-task-filter";
+import { buildTaskFilter, notion } from "services/notion";
 import { defineTool } from "streaming-agent";
 import { z } from "zod";
 

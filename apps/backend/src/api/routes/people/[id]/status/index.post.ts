@@ -6,18 +6,18 @@ import { z } from "zod";
 export default handler(
   {
     body: {
-      status: z.enum(Object.values(PersonStatus) as [string, ...string[]]),
-      date: z.string().nullable(),
+      status: z.enum(PersonStatus),
+      date: z.coerce.date(),
     },
   },
-  async ({ user, body, router: { id } }) => {
+  async ({ user, body: { status, date }, router: { id } }) => {
     requirePermission(user, "canEditPeople");
 
     await prisma.personStatusChange.create({
       data: {
         personId: id,
-        status: body.status as PersonStatus,
-        date: new Date(body.date ?? new Date()),
+        status,
+        date,
       },
     });
   },
