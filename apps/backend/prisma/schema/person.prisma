@@ -31,11 +31,12 @@ model Person {
   description        String?
   driveFolderId      String?
 
-  statusChanges     PersonStatusChange[]
-  transactions      Transaction[]
-  roles             Role[]
-  documents         PersonDocument[]
+  statusChanges    PersonStatusChange[]
+  transactions     Transaction[]
+  roles            Role[]
+  documents        PersonDocument[]
   documentInstances PersonDocumentInstance[]
+  monthlyPayments  MonthlyPayment[]
 }
 
 enum PersonStatus {

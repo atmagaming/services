@@ -8,6 +8,7 @@ import { api } from "$lib/api";
 import PersonDrawerContact from "./Contact.svelte";
 import PersonDrawerHeader from "./Header.svelte";
 import PersonDrawerLegal from "./Legal.svelte";
+import PersonDrawerMonthlyPayments from "./MonthlyPayments.svelte";
 import PersonDrawerStatus from "./Status.svelte";
 import PersonDrawerWorkConditions from "./WorkConditions.svelte";
 
@@ -228,6 +229,7 @@ const canSign = $derived(missingSigningFields.length === 0);
     <PersonDrawerWorkConditions bind:form {canEditPeople} />
 
     {#if !isAddMode && person}
+      <PersonDrawerMonthlyPayments personId={person.id} canEdit={canEditPeople} />
       <PersonDrawerStatus {person} {canEditPeople} {onDataChanged} />
       <PersonDrawerLegal
         bind:form

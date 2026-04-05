@@ -1,0 +1,10 @@
+model MonthlyPayment {
+  id            String @id @default(cuid())
+  personId      String
+  month         Int
+  year          Int
+  amountPaid    Float
+  amountAccrued Float
+
+  person Person @relation(fields: [personId], references: [id])
+}
