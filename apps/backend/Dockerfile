@@ -21,4 +21,7 @@ RUN cd apps/backend && bun install
 # Generate Prisma client
 RUN cd apps/backend && bunx prisma generate
 
-CMD ["bun", "run", "apps/backend/src/index.tsx"]
+# Build Nitro app
+RUN cd apps/backend && bun run build
+
+CMD ["bun", "run", "apps/backend/.output/server/index.mjs"]
