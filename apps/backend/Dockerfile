@@ -19,7 +19,10 @@ COPY apps/dashboard/package.json apps/dashboard/package.json
 RUN cd apps/backend && bun install
 
 # Generate Prisma client
-RUN cd apps/backend && bunx prisma generate
+RUN cd apps/backend && bun run prisma:generate
+
+# Generate Notion client
+RUN cd apps/backend && bun run notion:generate
 
 # Build Nitro app
 RUN cd apps/backend && bun run build
