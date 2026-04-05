@@ -38,6 +38,10 @@ services:
         sync: false
       - key: GOOGLE_DRIVE_AGREEMENTS_FOLDER_ID
         sync: false
+      - key: GOOGLE_DRIVE_PERSONAL_FOLDERS_PARENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_REDIRECT_URI
+        sync: false
       - key: NOTION_API_KEY
         sync: false
       - key: NOTION_PEOPLE_DB_ID
