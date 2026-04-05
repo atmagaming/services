@@ -1,5 +1,9 @@
 FROM oven/bun:1.2.20-slim
 
+ARG NOTION_API_KEY
+ARG NOTION_TASKS_DB_ID
+ARG NOTION_PEOPLE_DB_ID
+
 WORKDIR /app
 
 # Install build tools for native modules (better-sqlite3)
