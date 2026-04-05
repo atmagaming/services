@@ -8,6 +8,7 @@
   "scripts": {
     "dev:backend": "bun run --filter @atma/backend dev",
     "dev:dashboard": "bun run --filter @atma/dashboard dev",
+    "dev": "bun run --filter '*' dev",
     "lint": "biome check .",
     "format": "biome check --write ."
   },

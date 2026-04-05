@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y python3 make gcc g++ && rm -rf /var/lib
 
 # Copy root workspace files
 COPY package.json bun.lock ./
-COPY packages/ packages/
+COPY apps/ apps/
 
 # Copy backend app
 COPY apps/backend/ apps/backend/
