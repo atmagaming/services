@@ -1,6 +1,3 @@
 {
-  "buildCommand": "bun install && bun run build",
-  "outputDirectory": "build",
-  "framework": "svelte",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
