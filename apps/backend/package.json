@@ -1,8 +1,8 @@
 {
   "name": "@atma/backend",
   "version": "1.0.0",
-  "type": "module",
   "private": true,
+  "type": "module",
   "exports": {
     ".": "./generated/client/index.ts"
   },
@@ -22,6 +22,7 @@
     "drizzle:push": "drizzle-kit push",
     "drizzle:studio": "drizzle-kit studio",
     "notion:generate": "notion generate",
+    "prisma:generate": "prisma generate",
     "prisma:update": "bash scripts/prisma-update.sh",
     "postinstall": "nitro prepare"
   },
