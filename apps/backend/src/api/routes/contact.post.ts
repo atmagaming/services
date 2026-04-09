@@ -17,7 +17,7 @@ export default handler(
     try {
       await resend.emails.send({
         from: env.RESEND_FROM_EMAIL,
-        to: "hello@atmagaming.com",
+        to: "ceo.atmagaming@google.com",
         replyTo: email,
         subject: `New Contact Form Submission from ${name}`,
         html: `
