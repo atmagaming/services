@@ -21,7 +21,10 @@ export default handler(
         })
         .partial()
         .optional(),
-      schedule: z.string().regex(/^(\d+,){6}\d+$/).optional(),
+      schedule: z
+        .string()
+        .regex(/^(\d+,){6}\d+$/)
+        .optional(),
       paidHourly: z.number().optional(),
       accruedHourly: z.number().optional(),
       email: z.string().nullable().optional(),
@@ -43,7 +46,7 @@ export default handler(
       where: { id },
       data: {
         name: body.name,
-        role: roles?.map(r => r.id)
+        role: roles?.map((r) => r.id),
       },
       $icon: body.image,
     });

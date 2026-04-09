@@ -12,9 +12,7 @@ export const listFolderTool = defineTool(
       .describe("Folder ID to list contents of. If null, lists the contents of the root folder"),
   }),
   async ({ folderId }) => {
-    const items = folderId
-      ? await (await google.drive.folder(folderId)).files()
-      : await google.drive.rootFolders();
+    const items = folderId ? await (await google.drive.folder(folderId)).files() : await google.drive.rootFolders();
     return items.map((f) => f.toXML()).join("\n");
   },
 );

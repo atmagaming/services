@@ -64,8 +64,7 @@ export class Drive {
         const filtered = showFiles ? children : children.filter((f) => f instanceof DriveFolder);
         const sorted = sortNodes(filtered);
         folder.children.push(...sorted);
-        for (const child of sorted)
-          if (child instanceof DriveFolder) nextLevel.push(child);
+        for (const child of sorted) if (child instanceof DriveFolder) nextLevel.push(child);
       }
 
       currentLevel = nextLevel;

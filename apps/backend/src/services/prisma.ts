@@ -9,7 +9,10 @@ type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>;
 const globalForPrisma = globalThis as unknown as { prisma: ExtendedPrismaClient | undefined };
 
 function hoursPerWeek(schedule: string | null | undefined): number {
-  return (schedule ?? "0").split(",").map(Number).reduce((a, b) => a + b, 0);
+  return (schedule ?? "0")
+    .split(",")
+    .map(Number)
+    .reduce((a, b) => a + b, 0);
 }
 
 function createPrismaClient() {
@@ -41,13 +44,13 @@ function createPrismaClient() {
         paidMonthly: {
           needs: { paidHourly: true, schedule: true },
           compute({ paidHourly, schedule }) {
-            return paidHourly * hoursPerWeek(schedule) * 52 / 12;
+            return (paidHourly * hoursPerWeek(schedule) * 52) / 12;
           },
         },
         accruedMonthly: {
           needs: { accruedHourly: true, schedule: true },
           compute({ accruedHourly, schedule }) {
-            return accruedHourly * hoursPerWeek(schedule) * 52 / 12;
+            return (accruedHourly * hoursPerWeek(schedule) * 52) / 12;
           },
         },
       },

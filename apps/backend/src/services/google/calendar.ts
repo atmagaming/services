@@ -18,7 +18,12 @@ export class CalendarApi {
     return this.cachedTimezone;
   }
 
-  async listEvents(calendarId: string, timeMin: string, timeMax: string, maxResults = 50): Promise<calendar_v3.Schema$Event[]> {
+  async listEvents(
+    calendarId: string,
+    timeMin: string,
+    timeMax: string,
+    maxResults = 50,
+  ): Promise<calendar_v3.Schema$Event[]> {
     const response = await this.client.events.list({
       calendarId,
       timeMin,
@@ -40,7 +45,11 @@ export class CalendarApi {
     return response.data;
   }
 
-  async updateEvent(calendarId: string, eventId: string, event: calendar_v3.Schema$Event): Promise<calendar_v3.Schema$Event> {
+  async updateEvent(
+    calendarId: string,
+    eventId: string,
+    event: calendar_v3.Schema$Event,
+  ): Promise<calendar_v3.Schema$Event> {
     const response = await this.client.events.patch({ calendarId, eventId, requestBody: event });
     return response.data;
   }
@@ -49,7 +58,11 @@ export class CalendarApi {
     await this.client.events.delete({ calendarId, eventId });
   }
 
-  async getFreeBusy(timeMin: string, timeMax: string, calendarIds: string[]): Promise<calendar_v3.Schema$FreeBusyResponse> {
+  async getFreeBusy(
+    timeMin: string,
+    timeMax: string,
+    calendarIds: string[],
+  ): Promise<calendar_v3.Schema$FreeBusyResponse> {
     const response = await this.client.freebusy.query({
       requestBody: { timeMin, timeMax, items: calendarIds.map((id) => ({ id })) },
     });
