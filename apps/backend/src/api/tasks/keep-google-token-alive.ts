@@ -1,3 +1,4 @@
+import { defineTask } from "nitropack/runtime";
 import { google } from "services/google";
 
 // Runs monthly to keep the Google OAuth refresh token alive.

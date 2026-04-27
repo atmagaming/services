@@ -1,5 +1,4 @@
-import type { SessionUser } from "@atma/backend";
-import { api } from "$lib/api";
+import { api, type SessionUser } from "$lib/api";
 import { ls } from "$lib/storage";
 
 let user = $state<SessionUser | null>(null);

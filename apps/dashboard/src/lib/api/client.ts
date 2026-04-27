@@ -1,5 +1,6 @@
 import { NitroAPI } from "@atma/backend";
 import { ls } from "$lib/storage";
+import type { PersonStatus } from "./api-types";
 
 export const api = new NitroAPI({
   baseUrl: (import.meta.env.VITE_API_URL as string).replace(/\/+$/, ""),

@@ -1,7 +1,8 @@
 <script lang="ts">
 import FolderOpen from "@lucide/svelte/icons/folder-open";
 import FolderPlus from "@lucide/svelte/icons/folder-plus";
-import PersonAvatar from "$components/PersonAvatar.svelte";
+import Avatar from "$components/Avatar.svelte";
+import InlineEdit from "$components/inline-edit";
 
 const NOTION_ICON = "/icons/notion.webp";
 
@@ -11,7 +12,6 @@ const {
   isAddMode = false,
   canEditPeople = false,
   currentImage = "",
-  avatarUploading = false,
   focusName = false,
   driveFolderId = null,
   onUpload,
@@ -23,23 +23,30 @@ const {
   isAddMode?: boolean;
   canEditPeople?: boolean;
   currentImage?: string;
-  avatarUploading?: boolean;
   focusName?: boolean;
   driveFolderId?: string | null;
-  onUpload?: (file: File) => void;
+  onUpload?: (file: File) => void | Promise<void>;
   onClose?: () => void;
   onCreateFolder?: () => void;
 } = $props();
+
+const canEditHeader = $derived(!isAddMode && canEditPeople);
 </script>
 
 <div class="flex items-center gap-3 border-b border-border px-6 py-4">
-  <PersonAvatar
-    bind:name={form.name}
-    image={currentImage}
-    uploading={avatarUploading}
-    autofocus={focusName}
-    onUpload={!isAddMode && canEditPeople ? onUpload : undefined}
-  />
+  <div class="flex items-center gap-2">
+    <Avatar name={form.name} src={currentImage} onUpload={canEditHeader ? onUpload : undefined} />
+    {#if canEditHeader}
+      <InlineEdit
+        bind:value={form.name}
+        placeholder="Display name"
+        className="text-sm font-medium text-foreground"
+        autofocus={focusName}
+      />
+    {:else}
+      <p class="text-sm font-medium text-foreground">{form.name}</p>
+    {/if}
+  </div>
 
   {#if notionId}
     <a

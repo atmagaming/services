@@ -31,7 +31,7 @@ export default handler(
       return { success: true, message: "Thank you for your message. We'll get back to you soon!" };
     } catch (e) {
       console.error("Failed to send contact email:", e);
-      throw new Error("Failed to send contact form: " + (e instanceof Error ? e.message : String(e)));
+      throw new Error(`Failed to send contact form: ${e instanceof Error ? e.message : String(e)}`);
     }
   },
 );

@@ -15,10 +15,12 @@
     "noEmit": true,
 
     // Path aliases
-    "baseUrl": "./src",
     "paths": {
-      "@prisma/client": ["../generated/prisma/client"],
-      "@notion/client": ["../generated/notion-orm"]
+      "@prisma/client": ["./generated/prisma/client"],
+      "@notion/client": ["./generated/notion-orm"],
+      "api/*": ["./src/api/*"],
+      "env": ["./src/env.ts"],
+      "services/*": ["./src/services/*"]
     },
 
     // Best practices

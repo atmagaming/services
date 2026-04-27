@@ -148,12 +148,10 @@ async function createFolder() {
 
 // ── Avatar upload ─────────────────────────────────────────────────────────
 
-let avatarUploading = $state(false);
 const currentImage = $derived(person?.image ?? "");
 
 async function uploadAvatar(file: File) {
   if (!person) return;
-  avatarUploading = true;
   try {
     const fd = new FormData();
     fd.append("file", file);
@@ -161,8 +159,6 @@ async function uploadAvatar(file: File) {
     await onDataChanged();
   } catch (e) {
     console.error(`Avatar upload failed: ${(e as Error).message}`);
-  } finally {
-    avatarUploading = false;
   }
 }
 
@@ -208,7 +204,6 @@ const canSign = $derived(missingSigningFields.length === 0);
     {isAddMode}
     {canEditPeople}
     {currentImage}
-    {avatarUploading}
     {focusName}
     driveFolderId={person?.driveFolderId}
     onUpload={uploadAvatar}

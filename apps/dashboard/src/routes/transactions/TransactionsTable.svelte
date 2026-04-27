@@ -1,52 +1,54 @@
 <script lang="ts">
-import * as Select from "$components/select";
-import type { Transaction } from "$lib/api";
-import "$lib/date-extensions";
-import CircleHelp from "@lucide/svelte/icons/circle-help";
-import { Badge } from "$components/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
+  import * as Select from "$components/select";
+  import type { Transaction } from "$lib/api";
+  import "$lib/date-extensions";
+  import CircleHelp from "@lucide/svelte/icons/circle-help";
+  import { Badge } from "$components/badge";
+  import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$components/table";
 
-const {
-  transactions = [],
-  highlightPersonIds = [],
-  maskedPersonIds = [],
-}: {
-  transactions?: Transaction[];
-  highlightPersonIds?: string[];
-  maskedPersonIds?: string[];
-} = $props();
+  const {
+    transactions = [],
+    highlightPersonIds = [],
+    maskedPersonIds = [],
+  }: {
+    transactions?: Transaction[];
+    highlightPersonIds?: string[];
+    maskedPersonIds?: string[];
+  } = $props();
 
-let methodFilter = $state("all");
-let categoryFilter = $state("all");
-let tooltip = $state<{ x: number; y: number } | null>(null);
-let tooltipTimeout: ReturnType<typeof setTimeout> | undefined;
+  let methodFilter = $state("all");
+  let categoryFilter = $state("all");
+  let tooltip = $state<{ x: number; y: number } | null>(null);
+  let tooltipTimeout: ReturnType<typeof setTimeout> | undefined;
 
-const highlightSet = $derived(new Set(highlightPersonIds));
-const maskedSet = $derived(new Set(maskedPersonIds));
+  const highlightSet = $derived(new Set(highlightPersonIds));
+  const maskedSet = $derived(new Set(maskedPersonIds));
 
-const categories = $derived([...new Set(transactions.map((t) => t.category).filter(Boolean))].sort());
-const methods = ["Paid", "Accrued", "Invested"];
+  const categories = $derived(
+    [...new Set(transactions.map((t) => t.category).filter((c): c is string => c !== null && c !== ""))].sort(),
+  );
+  const methods = ["Paid", "Accrued", "Invested"];
 
-const filtered = $derived(
-  (() => {
-    let result = transactions;
-    if (methodFilter !== "all") result = result.filter((t) => t.method === methodFilter);
-    if (categoryFilter !== "all") result = result.filter((t) => t.category === categoryFilter);
-    return result;
-  })(),
-);
+  const filtered = $derived(
+    (() => {
+      let result = transactions;
+      if (methodFilter !== "all") result = result.filter((t) => t.method === methodFilter);
+      if (categoryFilter !== "all") result = result.filter((t) => t.category === categoryFilter);
+      return result;
+    })(),
+  );
 
-function showTooltip(event: MouseEvent) {
-  clearTimeout(tooltipTimeout);
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  tooltip = { x: rect.left + rect.width / 2, y: rect.top };
-}
+  function showTooltip(event: MouseEvent) {
+    clearTimeout(tooltipTimeout);
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    tooltip = { x: rect.left + rect.width / 2, y: rect.top };
+  }
 
-function hideTooltip() {
-  tooltipTimeout = setTimeout(() => {
-    tooltip = null;
-  }, 50);
-}
+  function hideTooltip() {
+    tooltipTimeout = setTimeout(() => {
+      tooltip = null;
+    }, 50);
+  }
 </script>
 
 <div class="rounded-xl border border-border bg-card shadow-sm">
@@ -120,7 +122,7 @@ function hideTooltip() {
             class={`whitespace-nowrap px-3 py-2.5 text-sm font-mono ${
               maskedSet.has(tx.personId ?? "")
                 ? "cursor-help text-muted-foreground"
-                : tx.amount > 0
+                : (tx.amount ?? 0) > 0
                   ? "text-(--green)"
                   : "text-(--red)"
             }`}
@@ -130,7 +132,7 @@ function hideTooltip() {
             {#if maskedSet.has(tx.personId ?? "")}
               <CircleHelp size={16} class="inline opacity-40" />
             {:else}
-              ${Math.abs(tx.amount).toLocaleString()}
+              ${Math.abs(tx.amount ?? 0).toLocaleString()}
             {/if}
           </TableCell>
         </TableRow>

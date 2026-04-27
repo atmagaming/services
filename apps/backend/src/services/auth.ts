@@ -2,18 +2,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { User } from "@prisma/client";
 import { env, superAdminEmails } from "env";
 import { createError } from "h3";
+import type { SessionUser } from "../../types";
 import { prisma } from "./prisma";
 
-export interface SessionUser {
-  email: string;
-  personId: string | null;
-  isSuperAdmin: boolean;
-  canViewTransactions: boolean;
-  canViewRevenueShares: boolean;
-  canViewPersonalData: boolean;
-  canEditTransactions: boolean;
-  canEditPeople: boolean;
-}
+export type { SessionUser };
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
