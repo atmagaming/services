@@ -1,4 +1,11 @@
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+// @ts-expect-error - pdfjs-dist ships no declarations for the worker entry
+import * as pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs";
+
+// Nitro only traces statically-imported files, so the dynamic `import("./pdf.worker.mjs")`
+// inside pdf.mjs fails in the bundled output. Exposing the worker module on globalThis
+// makes pdfjs use the in-process handler and skip the dynamic import entirely.
+(globalThis as { pdfjsWorker?: unknown }).pdfjsWorker = pdfjsWorker;
 
 export class SignatureBoxExtractor {
   private readonly pdf;
